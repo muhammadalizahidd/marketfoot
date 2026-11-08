@@ -1,0 +1,85 @@
+/* Hall of Fame — measured from Figma "Hall Of Fame" (622:57553), 1440 x 940 frame. */
+.hof { min-height: calc(100dvh / var(--ui-scale, 1)); background: #082a8f; font-family: var(--mf-font); color: #fff; overflow-x: clip; }
+.hof-frame { position: relative; width: 1440px; height: 940px; margin: 0 auto; overflow: hidden; }
+.hof-frame::before { /* fond-hall-of-fame: deep blue vignette + radiating light rays */
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  background:
+    repeating-conic-gradient(from 3deg at 750px 600px, rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, 0.085) 1.2deg, rgba(255, 255, 255, 0.085) 5deg, rgba(255, 255, 255, 0) 6.2deg, rgba(255, 255, 255, 0) 11deg),
+    radial-gradient(ellipse 900px 700px at 533px 560px, #1b46aa 0%, #123a9f 45%, #0a2a8a 75%, #08216e 100%);
+}
+.hof-frame > * { position: relative; z-index: 1; }
+.hof .ms-top { position: absolute; left: 0; top: 0; }
+.hof .ms-fame[aria-current="page"] { box-shadow: 0 0 0 3px #fff; }
+
+.hof-groups { position: absolute; left: 0; top: 126px; width: 1440px; height: 165px; }
+.hof-group { position: absolute; top: 24px; }
+.hof-group--managers { left: 24px; width: 676px; }
+.hof-group--joueurs { left: 740px; width: 676px; }
+.hof-group-head { margin: 0 8px; height: 48px; display: flex; align-items: center; }
+.hof-group-head .hof-tile { margin-left: 8px; }
+.hof-group-head h2 { margin: 0 0 0 8px; font-size: 16px; line-height: 21px; font-weight: 600; }
+.hof-group-head i { flex: 1; margin-left: 8px; margin-right: 8px; height: 0; border-top: 1px solid rgba(255, 255, 255, 0.55); }
+.hof-tile { width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; color: #fff; background: #0b5fff; }
+.hof-group--joueurs .hof-tile { background: #e08735; }
+.hof-tile svg { width: 17px; height: 17px; }
+
+.hof-cards { margin: 0 8px; display: flex; gap: 8px; height: 69px; align-items: center; }
+.hof-card { box-sizing: border-box; display: flex; align-items: center; gap: 8px; height: 67px; flex: 1 1 0; min-width: 0; padding-left: 24px; color: #fff; text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.6); background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 20, 90, 0.18)); backdrop-filter: blur(6px); }
+.hof-card:first-child { border-bottom-left-radius: 24px; }
+.hof-card:last-child { border-top-right-radius: 24px; }
+.hof-card-text { display: flex; flex-direction: column; font-size: 12px; line-height: 16px; white-space: nowrap; }
+.hof-card-text b { font-size: 14px; line-height: 18px; font-weight: 700; }
+.hof-card.is-active { height: 69px; background: #fff; border-color: #fff; border-radius: 0; color: #0b5fff; }
+.hof-card.is-active .hof-card-text b { font-size: 16px; line-height: 21px; }
+.hof-card.is-active .hof-tile { background: #001a4f; color: #0b5fff; }
+.hof-card:not(.is-active):hover { background: rgba(255, 255, 255, 0.12); }
+
+.hof-intro { position: absolute; left: 80px; top: 338px; width: 905px; }
+.hof-intro h1 { margin: 0; font-size: 36px; line-height: 47px; font-weight: 700; text-transform: uppercase; letter-spacing: 0; }
+.hof-intro p { margin: 8px 0 0; font-size: 16px; line-height: 21px; font-weight: 400; }
+.hof-toggle { margin-top: 32px; box-sizing: border-box; width: 196px; height: 40px; padding: 4px; display: flex; border-radius: 8px; background: #edf2fe; }
+.hof-toggle a { flex: 1 1 auto; display: grid; place-items: center; border-radius: 6px; font-size: 13px; font-weight: 500; color: #121212; text-decoration: none; }
+.hof-toggle a:first-child { flex-basis: 99px; }
+.hof-toggle a.is-active { background: #0b5fff; color: #fff; font-weight: 700; }
+
+/* podium: 3 cards of 275 px */
+.hof-podium { position: absolute; left: 80px; top: 550px; width: 905px; height: 366px; }
+.hof-medal { position: absolute; width: 275px; box-sizing: border-box; border-radius: 12px; padding: 0 3px 3px; background: var(--g); box-shadow: var(--glow); color: #121212; }
+.hof-medal--silver { left: 0; top: 40px; height: 326px; --g: linear-gradient(90deg, #f2f2f2, #9d9d9d); --glow: 0 0 36px 4px rgba(255, 255, 255, 0.45); }
+.hof-medal--gold { left: 315px; top: 0; height: 366px; --g: linear-gradient(90deg, #f59e0b, #ffd600); --glow: 0 0 40px 6px rgba(255, 196, 0, 0.7); }
+.hof-medal--bronze { left: 630px; top: 34px; height: 332px; --g: linear-gradient(90deg, #f6d2b0, #653a25); --glow: 0 0 36px 4px rgba(255, 190, 140, 0.5); }
+.hof-medal-top { height: 127px; margin: 0 -3px; display: flex; justify-content: center; }
+.hof-place { margin-top: 32px; font-size: 36px; line-height: 47px; font-weight: 700; color: #000; }
+.hof-place sup { font-size: 24px; line-height: 0; vertical-align: super; font-weight: 700; margin-left: 1px; position: relative; top: -2px; }
+.hof-medal-body { position: absolute; left: 3px; right: 3px; top: 127px; bottom: 3px; background: #fff; border-radius: 0 0 9px 9px; }
+.hof-medal--gold .hof-medal-top { height: 98px; }
+.hof-medal--gold .hof-medal-body { top: 98px; }
+.hof-medal-avatar { position: absolute; left: 76px; top: 88px; width: 124px; height: 124px; border-radius: 50%; box-shadow: 0 0 0 3px #fff; object-fit: cover; }
+.hof-medal--gold .hof-medal-avatar { left: 76.33px; top: 92px; }
+.hof-medal--bronze .hof-medal-avatar { left: 75.67px; top: 93px; }
+.hof-medal-who { position: absolute; left: 62.5px; top: 231px; width: 150px; text-align: center; }
+.hof-medal--bronze .hof-medal-who { top: 237px; }
+.hof-medal-who strong, .hof-medal-who span { display: block; font-size: 16px; line-height: 21px; font-weight: 600; }
+.hof-medal-who span { color: #7d7d7d; }
+.hof-amount { position: absolute; left: 50%; transform: translateX(-50%); top: 281px; min-width: 86px; padding: 0 10px; white-space: nowrap; height: 29px; box-sizing: border-box; display: grid; place-items: center; border-radius: 4px; background: #e8f0fe; color: #0b5fff; font-size: 16px; line-height: 21px; font-weight: 600; }
+.hof-medal--bronze .hof-amount { top: 287px; }
+.hof-empty { max-width: 520px; line-height: 1.4; }
+.hof-empty { position: absolute; left: 80px; top: 580px; margin: 0; font-size: 16px; }
+
+/* right ranking: 342 x 599 glass panel at (1065, 308) */
+.hof-ranking { position: absolute; left: 1065px; top: 308px; width: 342px; height: 599px; box-sizing: border-box; border: 1px solid rgba(255, 255, 255, 0.35); border-bottom: 0; border-radius: 10px 10px 0 0; background: linear-gradient(180deg, rgba(8, 40, 135, 0.9), rgba(6, 28, 100, 0.92)); overflow: hidden; backdrop-filter: blur(8px); }
+.hof-ranking header { height: 55px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+.hof-ranking h2 { margin: 0; font-size: 18.5px; line-height: 23px; font-weight: 500; text-transform: uppercase; }
+.hof-ranking header span { font-size: 12px; font-weight: 500; }
+.hof-ranking ol { list-style: none; margin: 0; padding: 0; }
+.hof-ranking li { position: relative; height: 61px; margin-bottom: 8px; display: flex; align-items: center; }
+.hof-ranking li:last-child { margin-bottom: 0; }
+.hof-ranking .rk { width: 30px; margin-left: 5px; text-align: center; font-size: 16px; line-height: 21px; font-weight: 600; }
+.hof-ranking img { width: 32px; height: 32px; margin-left: 16px; border-radius: 50%; object-fit: cover; }
+.hof-ranking .who { width: 150px; margin-left: 16px; display: flex; flex-direction: column; }
+.hof-ranking .who b { font-size: 16px; line-height: 21px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hof-ranking .who small { font-size: 12px; line-height: 16px; font-weight: 600; color: rgba(255, 255, 255, 0.8); }
+.hof-ranking .vl { margin-left: auto; margin-right: 6px; width: 70px; text-align: right; font-size: 16px; line-height: 21px; font-weight: 600; white-space: nowrap; }
+.hof-ranking li.is-me { background: #0b5fff; margin-left: -1px; margin-right: -1px; padding-left: 1px; }
+.hof-ranking li.is-me:last-child { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; }
+.hof-ranking li.is-me .who small { color: rgba(255, 255, 255, 0.65); }

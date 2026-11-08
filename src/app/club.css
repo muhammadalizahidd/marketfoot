@@ -1,0 +1,57 @@
+/* Club profile ("Team Form", Figma 1:25200): 923px content column next to the 268px sidebar. */
+.cp { width: 923px; max-width: 100%; padding-top: 24px; font-family: var(--mf-font); color: #121212; }
+.cp-table { background: #fff; border-radius: 12px; box-shadow: 0 2px 14px rgba(18, 18, 18, 0.07); overflow: hidden; }
+.cp-head { display: flex; align-items: center; height: 40px; padding: 0 0 0 12px; background: #f5f5f5; font-size: 10px; color: #7b7b7b; }
+.cp-head > *, .cp-row > * { flex-shrink: 0; }
+.cp-c-name { width: 158px; }
+.cp-c-pos { width: 72.5px; }
+.cp-c-num { width: 72.5px; display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
+.cp-c-value { width: 64.5px; margin-left: 0; text-align: right; color: inherit; text-decoration: none; }
+.cp-head .cp-c-value { display: inline-flex; align-items: center; justify-content: flex-start; margin-left: 0; }
+.cp-head a:hover { color: #0b5fff; }
+.cp-chev { margin-left: 2px; color: #0b5fff; }
+.cp-icon { height: 14px; width: auto; display: block; }
+.cp-icon--boot { height: 10px; }
+.cp-card { display: block; width: 10px; height: 15.5px; border-radius: 1px; }
+.cp-card--yellow { background: #ffe600; margin-left: 10px; }
+.cp-card--red { background: #e60000; margin-left: 9px; }
+
+.cp-all { display: flex; align-items: center; height: 40px; padding: 0 12px; gap: 4px; font-size: 12px; color: #121212; text-decoration: none; }
+.cp-check { width: 9px; height: 9px; box-sizing: border-box; border: 1.3px solid #333; border-radius: 2px; margin-right: 2px; position: relative; }
+.cp-check.is-checked { background: #0b5fff; border-color: #0b5fff; }
+.cp-check.is-checked::after { content: ""; position: absolute; left: 1.5px; top: -1px; width: 2.5px; height: 5.5px; border: solid #fff; border-width: 0 1.5px 1.5px 0; transform: rotate(40deg); }
+
+.cp-row { position: relative; display: flex; align-items: center; height: 40px; padding-left: 12px; font-size: 12px; }
+.cp-row.is-group { border-top: 1px solid #6b6b6b; }
+.cp-row .cp-c-name { display: flex; align-items: center; gap: 2.5px; white-space: nowrap; overflow: hidden; }
+.cp-row .cp-c-name img { width: 16px; height: 16px; object-fit: contain; }
+.cp-row .cp-c-value { text-align: right; }
+.cp-row .cp-c-num { display: block; }
+.cp-eye { position: absolute; right: 12px; top: 12px; width: 16px; height: 16px; color: #0b5fff; display: grid; place-items: center; }
+.cp-pos { display: inline-grid; place-items: center; width: 18px; height: 16px; border-radius: 4px; font-size: 12px; font-weight: 500; line-height: 1; }
+.cp-pos--G { background: #fdf1de; color: #c46a00; }
+.cp-pos--D { background: #e6e6fb; color: #4747b5; }
+.cp-pos--M { background: #def5e4; color: #12994a; }
+.cp-pos--A { background: #fde4e4; color: #d02a2a; }
+.cp-empty { margin: 0; padding: 24px 12px; color: #687182; }
+
+.cp-calendar { margin-top: 25.5px; }
+.cp-calendar h2 { margin: 0; padding-top: 16px; height: 48px; box-sizing: border-box; font-size: 12px; line-height: 16px; font-weight: 700; }
+.cp-grid { display: grid; grid-template-columns: repeat(6, 147.17px); gap: 8px; }
+.cp-match { box-sizing: border-box; height: 72px; padding: 9px; border: 1px solid #e6e6e6; border-radius: 6px; background: #fff; color: inherit; text-decoration: none; display: block; }
+.cp-match:hover { border-color: #0b5fff; }
+.cp-match-meta { display: flex; align-items: center; gap: 6px; height: 12px; font-size: 6px; }
+.cp-match-meta b { min-width: 9px; height: 12px; box-sizing: border-box; padding: 0 2px; display: grid; place-items: center; background: #e8f0ff; color: #0b5fff; font-weight: 400; border-radius: 1px; font-size: 6px; }
+.cp-match-meta time { color: #121212; }
+.cp-team { display: flex; align-items: center; height: 16px; margin-top: 4px; font-size: 12px; line-height: 16px; }
+.cp-team:first-of-type { margin-top: 7px; }
+.cp-team img { width: 14px; height: 14px; margin-right: 4px; object-fit: contain; }
+.cp-team span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-team strong { font-weight: 700; width: 7px; text-align: right; }
+
+@media (max-width: 900px) {
+  .cp { width: 100%; }
+  .cp-table { overflow-x: auto; }
+  .cp-head, .cp-row, .cp-all { min-width: 923px; }
+  .cp-grid { grid-template-columns: repeat(auto-fill, minmax(147px, 1fr)); }
+}

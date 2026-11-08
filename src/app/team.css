@@ -1,0 +1,117 @@
+/* Team workspace (Composition / Captain / Transfers / Predictions) — measured from the 1440px Figma frames. */
+:root {
+  --tm-blue: #085eff;
+  --tm-tab-bg: #ebf2ff;
+  --tm-pitch: #009b36;
+  --tm-pitch-light: #03a434;
+  --tm-up: #0cca4a;
+  --tm-down: #ff3b3b;
+}
+
+.tm-workspace { display: flex; align-items: flex-start; gap: 24px; flex: 1; min-width: 0; margin-top: 24px; font-family: var(--mf-font); }
+.tm-main { width: 759px; flex-shrink: 0; min-width: 0; }
+.tm-aside { width: 313px; flex-shrink: 0; }
+
+/* Tabs bar 759 x 42 */
+.tm-tabs { display: flex; height: 42px; box-sizing: border-box; padding: 4px; gap: 0; border-radius: 8px; background: var(--tm-tab-bg); box-shadow: 0 2px 8px rgba(8, 94, 255, 0.08); }
+.tm-tabs a { flex: 1; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 6px; color: #121212; font-size: 15px; text-decoration: none; }
+.tm-tabs a svg { width: 18px; height: 18px; }
+.tm-tabs a.is-active { background: #fff; color: var(--tm-blue); font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); }
+.tm-tabs a:not(.is-active):hover { background: rgba(255, 255, 255, 0.6); }
+
+.tm-note { margin: 16px 0 0; font-size: 13px; line-height: 1.4; color: #4a5568; }
+.tm-alert { margin: 10px 0 0; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+.tm-alert--error { background: #fff0f0; color: #b42318; }
+.tm-alert--success { background: #ecfdf3; color: #067647; }
+.tm-alert--info { background: var(--tm-tab-bg); color: #1d3a8a; }
+
+/* Valeur / Spéculation / Possesseur */
+.tm-switch { display: flex; width: max-content; margin-top: 24px; height: 32px; border-radius: 8px 8px 0 0; overflow: hidden; box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05); }
+.tm-switch button { border: 0; padding: 0 24px; background: #f7f5f5; color: #8a8a8a; font: inherit; font-size: 12px; cursor: pointer; }
+.tm-switch button.is-active { background: var(--tm-blue); color: #fff; font-weight: 700; }
+
+/* Pitch 499 x 646 + bench 252 x 646 */
+.tm-field { display: flex; gap: 8px; }
+.tm-pitch, .tm-bench { position: relative; height: 646px; flex-shrink: 0; overflow: hidden; background: repeating-linear-gradient(180deg, #00a336 0 51px, var(--tm-pitch) 51px 102px); }
+.tm-pitch { width: 499px; border-radius: 0 24px 24px 24px; }
+.tm-bench { width: 252px; border-radius: 0 24px 24px 0; }
+.tm-markings { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.tm-pitch-rows { position: relative; padding-top: 23px; }
+.tm-bench .tm-pitch-rows { padding-top: 26px; }
+.tm-row { height: 168px; display: flex; justify-content: center; align-items: flex-start; gap: 32px; }
+.tm-row--bench { gap: 24px; }
+
+/* Player slot: 40x37 jersey, 6px gap, 90x62 card */
+.tm-slot { width: 90px; border: 0; padding: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #111; font-family: inherit; cursor: pointer; }
+.tm-slot:disabled { cursor: not-allowed; }
+.tm-jersey { position: relative; width: 40px; height: 37px; display: block; }
+.tm-jersey img { width: 56px; height: 52px; margin: -7.5px -8px; object-fit: contain; display: block; }
+.tm-captain { position: absolute; left: calc(50% + 15.5px); top: calc(50% - 1.5px); width: 18px; height: 18px; border-radius: 50%; background: #fff; color: var(--tm-pitch); font-size: 12px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
+.tm-card { width: 90px; height: 62px; box-sizing: border-box; padding-top: 3px; border-radius: 6px; background: #fff; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.28); display: flex; flex-direction: column; align-items: center; }
+.tm-card-name { max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 16px; }
+.tm-card-value { font-size: 12px; line-height: 16px; font-weight: 700; margin-top: 1px; }
+.tm-pill { margin-top: 5.5px; height: 17px; min-width: 24px; box-sizing: border-box; padding: 0 6px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; color: #fff; background: #9aa3b2; }
+.tm-pill.is-up { background: var(--tm-up); }
+.tm-pill.is-down { background: var(--tm-down); }
+.tm-pill--owners { background: #e8e8e8; color: #111; }
+.tm-slot.is-selected .tm-card { outline: 3px solid #ffd21e; }
+.tm-slot.is-eligible .tm-card { outline: 3px solid #fff; }
+.tm-slot.is-ineligible, .tm-slot.is-frozen { opacity: 0.55; }
+.tm-slot--empty { height: 105px; justify-content: center; border: 2px dashed rgba(255, 255, 255, 0.7); border-radius: 8px; color: #fff; }
+.tm-slot-plus { font-size: 24px; line-height: 1; }
+.tm-slot-pos { font-size: 11px; font-weight: 700; }
+
+/* Right panels (Bonus, Captain, Transfers, Predictions) 313px */
+.tm-panel { width: 313px; box-sizing: border-box; border-radius: 24px; overflow: hidden; background: var(--tm-tab-bg); min-height: 766px; box-shadow: 0 2px 10px rgba(8, 94, 255, 0.12); }
+.tm-panel-head { height: 55px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; background: var(--tm-blue); color: #fff; }
+.tm-panel-head h2 svg { width: 15px; height: 15px; }
+.tm-panel-head h2 { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; }
+.tm-badge { height: 20px; padding: 0 6px; border-radius: 4px; background: #fff; color: var(--tm-blue); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; }
+.tm-bonus-list { list-style: none; margin: 24px 0 0; padding: 8px 0; border-radius: 12px 12px 0 0; background: #fff; }
+.tm-bonus-item { width: 100%; box-sizing: border-box; padding: 0 8px; margin: 0 0 8px; border: 0; background: transparent; display: flex; align-items: center; gap: 8px; text-align: left; font-family: inherit; cursor: pointer; position: relative; height: 60px; }
+.tm-bonus-item img { width: 60px; height: 60px; border-radius: 4px; flex-shrink: 0; }
+.tm-bonus-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 10.5px; line-height: 13px; color: #1a1a1a; padding-right: 36px; }
+.tm-bonus-text strong { font-size: 11px; font-weight: 700; }
+.tm-bonus-count { position: absolute; right: 10px; top: 0; height: 22px; min-width: 24px; box-sizing: border-box; border: 1px solid var(--tm-blue); border-radius: 4px; color: var(--tm-blue); font-size: 10px; font-weight: 700; display: grid; place-items: center; background: #fff; }
+.tm-bonus-item.is-chosen { background: var(--tm-tab-bg); border-radius: 8px; }
+
+@media (max-width: 1100px) {
+  .tm-workspace { flex-direction: column; }
+  .tm-main { width: 100%; }
+  .tm-aside, .tm-panel { width: 100%; }
+  .tm-field { overflow-x: auto; }
+}
+
+/* Captain panel */
+.tm-cap-list { list-style: none; margin: 24px 0 0; padding: 0; background: #fff; }
+.tm-cap-row { height: 48.5px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 10px; border-bottom: 1px solid #e8edf5; }
+.tm-cap-pick { flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 8px; border: 0; background: transparent; padding: 0; font-family: inherit; text-align: left; cursor: pointer; color: #111; }
+.tm-cap-pick:disabled { cursor: default; }
+.tm-cap-row.is-frozen .tm-cap-pick { opacity: 0.55; cursor: not-allowed; }
+.tm-check { width: 12px; height: 12px; box-sizing: border-box; border: 1px solid #7f8da8; border-radius: 2px; display: grid; place-items: center; flex-shrink: 0; }
+.tm-check.is-checked { background: var(--tm-blue); border-color: var(--tm-blue); }
+.tm-cap-pick img { width: 36px; height: 34px; object-fit: contain; flex-shrink: 0; }
+.tm-cap-name { display: flex; flex-direction: column; gap: 3px; min-width: 0; font-size: 13px; line-height: 15px; }
+.tm-cap-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tm-cap-name em { align-self: flex-start; font-style: normal; font-size: 8px; line-height: 10px; padding: 1px 4px; border-radius: 3px; background: #eaf1ff; color: #35507f; }
+.tm-cap-count { min-width: 34px; height: 24px; box-sizing: border-box; border: 1.5px solid var(--tm-blue); border-radius: 4px; color: var(--tm-blue); font-size: 11px; font-weight: 700; display: grid; place-items: center; background: #fff; }
+.tm-cap-count.is-selected { background: var(--tm-blue); color: #fff; }
+.tm-cap-count.is-exhausted { border-color: var(--tm-down); color: var(--tm-down); }
+.tm-cap-eye { color: var(--tm-blue); display: grid; place-items: center; }
+.tm-cap-list + * { margin: 0; }
+
+/* Transfers + Predictions reuse the Bonus / Captain workspace; only the panel body differs. */
+.tm-main--static .tm-slot { cursor: default; }
+.tm-panel--form { display: flex; flex-direction: column; height: 780px; }
+.tm-panel-quota { display: flex; gap: 6px; padding: 0 16px 14px; background: var(--tm-blue); flex-shrink: 0; }
+.tm-panel--form .transfer-drawer-body { flex: 1; min-height: 0; padding: 16px 12px 12px; }
+.tm-panel--form .transfer-drawer-footer { border-radius: 12px 12px 0 0; }
+.prediction-drawer .prediction-summary { margin: 16px 12px 0; padding: 10px 12px; border-radius: 12px; background: #fff; font-size: 12px; line-height: 1.4; }
+.prediction-drawer .prediction-summary p { margin: 0; }
+.prediction-drawer .prediction-drawer-list { margin-top: 16px; padding: 4px 16px 16px; border-radius: 12px 12px 0 0; background: #fff; overflow: visible; }
+.prediction-drawer .prediction-summary + .prediction-drawer-list { margin-top: 12px; }
+.prediction-drawer .tm-panel-head { gap: 12px; }
+@media (max-width: 1100px) { .tm-panel--form { height: auto; max-height: none; } }
+.prediction-drawer { display: flex; flex-direction: column; height: 780px; }
+.prediction-drawer .prediction-drawer-list { flex: 1; min-height: 0; overflow-y: auto; border-radius: 12px 12px 0 0; }
+@media (max-width: 1100px) { .prediction-drawer { height: auto; } }
