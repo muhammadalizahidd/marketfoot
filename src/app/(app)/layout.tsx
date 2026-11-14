@@ -1,3 +1,4 @@
+import { trophyImage } from "@/rules/honours";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
@@ -22,7 +23,7 @@ export default async function ApplicationLayout({ children }: Readonly<{ childre
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/connexion");
   const [{ data: profile }, { data: finances }, { data: ranking }, rankings, movers] = await Promise.all([
-    supabase.from("profiles").select("username,avatar_url,banned_at,last_seen_at").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("username,avatar_url,banned_at,last_seen_at,displayed_trophy").eq("id", user.id).maybeSingle(),
     supabase.from("gamer_finances").select("budget,blocked_account").eq("gamer_id", user.id).maybeSingle(),
     supabase.from("ranking_snapshots").select("general_rank,total_wealth").eq("gamer_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     getLatestRankings().catch(() => []),
@@ -44,6 +45,7 @@ export default async function ApplicationLayout({ children }: Readonly<{ childre
       topBuys={movers.buys}
       topSells={movers.sells}
       avatarUrl={profile?.avatar_url}
+      trophyImage={trophyImage(profile?.displayed_trophy)}
       userId={user.id}
     >
       {frozen && <div className="site-freeze-banner" role="status"><b>Site gelé.</b> {SITE_FROZEN_MESSAGE}</div>}

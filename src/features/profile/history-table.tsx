@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import type { HistoryRow, PlayerPrime } from "@/data/repositories/performance-repository";
 
-const M = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M€`;
+const M = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
 const money = (value: number) => (Math.abs(value) >= 1_000_000 ? M(value) : `${Math.round(value / 1000).toLocaleString("fr-FR")} k€`);
 const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "-" : ""}${money(Math.abs(value))}`;
 const when = (iso: string) => {
@@ -49,6 +49,17 @@ export function HistoryTable({ rows, defaultOpen }: { rows: HistoryRow[]; defaul
               </button>
               {expanded && (
                 <div className="gp-detail">
+                  <section className="gp-sub gp-bonus" aria-label="Bonus joué">
+                    <h3>Bonus</h3>
+                    {row.bonus ? (
+                      <div className="gp-bonus-card">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`/images/bonus/${row.bonus.image}.png`} alt="" width={48} height={48} />
+                        <div><b>{row.bonus.title}</b><p>{row.bonus.text}</p></div>
+                        <em className={row.bonus.succeeded === null ? "" : row.bonus.succeeded ? "is-up" : "is-down"}>{row.bonus.succeeded === null ? "En attente" : row.bonus.succeeded ? `Réussi${row.bonus.amount ? ` ${signed(row.bonus.amount)}` : ""}` : "Raté"}</em>
+                      </div>
+                    ) : <p className="gp-none">Aucun bonus joué sur cette journée.</p>}
+                  </section>
                   <section className="gp-sub gp-transfers">
                     <h3>Transferts</h3>
                     {row.transfers.length ? <ul>{row.transfers.map((t, i) => (

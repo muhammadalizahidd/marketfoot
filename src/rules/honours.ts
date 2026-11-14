@@ -25,4 +25,11 @@ export const trophySections: { title: string; rows: { key: string; category: Hon
   { title: "Classement pronostics", rows: [{ key: "predictions", category: "predictions", bands: honoursBands }] },
   { title: "Badge journée", rows: [{ key: "matchday", category: "matchday_primes", bands: honoursBands }, { key: "matchday-pred", category: "matchday_predictions", bands: [1] }] },
 ];
+/** Image of a stored trophy key ("category:band", as saved in profiles.displayed_trophy), or null when none / unknown. */
+export function trophyImage(key: string | null | undefined): string | null {
+  if (!key) return null;
+  const [category, band] = key.split(":");
+  const row = trophySections.flatMap((section) => section.rows).find((item) => item.category === category && item.bands.some((b) => String(b) === band));
+  return row ? `/images/trophies/${row.key}-${band}.png` : null;
+}
 export const trophySlotCount = trophySections.reduce((sum, section) => sum + section.rows.reduce((inner, row) => inner + row.bands.length, 0), 0);

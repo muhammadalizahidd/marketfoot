@@ -3,38 +3,16 @@
 import { useActionState, useMemo, useState } from "react";
 import { Bench, DisplayModeSwitch, Pitch, PlayerCard, type DisplayMode, type PitchPlayer } from "@/components/team/pitch";
 import { TeamTabs } from "@/components/team/team-tabs";
+import { HelpTip } from "@/components/team/help-tip";
+import { PlayerPanel } from "@/components/team/player-panel";
 import { submitDirectTransfer, submitMercadoTransfer, cancelMercadoTransfer, type TransferActionState } from "./actions";
+import { clubCode } from "@/lib/club-codes";
 import { getJerseyImage } from "@/lib/jersey-map";
 import { getTransferTaxRate, type TransferMode } from "@/rules/transfers";
 import { marketfootRulesConfig } from "@/rules/config";
 
-// ponytail: lightweight club code mapper for catalogue badges
 export function getClubAbbreviation(clubName?: string): string {
-  if (!clubName) return "L1";
-  const name = clubName.toLowerCase();
-  if (name.includes("marseille") || name.includes("om")) return "OM";
-  if (name.includes("monaco") || name.includes("asm")) return "ASM";
-  if (name.includes("brest") || name.includes("sb")) return "SB";
-  if (name.includes("toulouse") || name.includes("tfc")) return "TFC";
-  if (name.includes("lille") || name.includes("losc")) return "LIL";
-  if (name.includes("paris saint") || name.includes("psg")) return "PSG";
-  if (name.includes("lens") || name.includes("rcl")) return "RCL";
-  if (name.includes("rennes") || name.includes("rennais") || name.includes("srfc")) return "SR";
-  if (name.includes("lyon") || name.includes("ol")) return "OL";
-  if (name.includes("strasbourg") || name.includes("rcsa")) return "RCS";
-  if (name.includes("nantes") || name.includes("fcn")) return "FCN";
-  if (name.includes("nice") || name.includes("ogc")) return "OGC";
-  if (name.includes("angers") || name.includes("sco")) return "SCO";
-  if (name.includes("havre") || name.includes("hac")) return "HAC";
-  if (name.includes("auxerre") || name.includes("aja")) return "AJA";
-  if (name.includes("saint-étienne") || name.includes("asse")) return "ASSE";
-  if (name.includes("reims") || name.includes("sdr")) return "SDR";
-  if (name.includes("montpellier") || name.includes("mhsc")) return "MHSC";
-  if (name.includes("troyes") || name.includes("estac")) return "ESTAC";
-  if (name.includes("lorient")) return "FCL";
-  if (name.includes("mans")) return "MANS";
-  if (name.includes("paris fc") || name.includes("pfc")) return "PFC";
-  return clubName.slice(0, 3).toUpperCase();
+  return clubName ? clubCode(clubName) : "L1";
 }
 
 // ponytail: compact french euro format matching Figma (e.g. 18,60 M€, 645 k€)
@@ -42,13 +20,17 @@ export function formatCompactEuro(amount: number): string {
   const abs = Math.abs(amount);
   if (abs >= 1_000_000) {
     const val = amount / 1_000_000;
-    return `${val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M€`;
+    return `${val.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
   }
   if (abs >= 1_000) {
     const val = amount / 1_000;
     return `${Math.round(val).toLocaleString("fr-FR")} k€`;
   }
   return `${amount.toLocaleString("fr-FR")} €`;
+}
+
+function Chevron() {
+  return <span className="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg></span>;
 }
 
 export type TransferMember = {
@@ -211,12 +193,10 @@ export function TransferManager({
   const renderSlot = (member: TransferMember | undefined, position: string, key: string) => {
     if (!member) return <PlayerCard key={key} position={position} mode={displayMode} disabled />;
     const isSelected = soldPlayerId === member.id;
-    const replacement = isSelected ? boughtPlayer : undefined;
-    const acquired = member.acquiredValue ?? member.value;
-    const shown: PitchPlayer = replacement
-      ? { id: member.id, name: replacement.name, clubName: replacement.club, value: replacement.value, changePct: 0, speculation: 0, isCaptain: member.isCaptain, frozen: member.frozen }
-      : {
+        const acquired = member.acquiredValue ?? member.value;
+    const shown: PitchPlayer = {
           id: member.id,
+          clubId: member.clubId,
           name: member.name,
           clubName: member.clubName,
           value: member.value,
@@ -239,7 +219,7 @@ export function TransferManager({
   });
 
   return (
-    <div className="tm-workspace">
+    <div className={`tm-workspace${selectedPlayerForModal ? " tm-workspace--with-player" : ""}`}>
       <div className="tm-main">
         <TeamTabs active="transfert" />
         <DisplayModeSwitch mode={displayMode} onChange={setDisplayMode} />
@@ -248,11 +228,6 @@ export function TransferManager({
           <Bench rows={benchRows} />
         </div>
 
-        <p className="tm-note">
-          {mode === "mercado"
-            ? "La période de mercato est ouverte. Ajoute tes ordres de transfert avant sa fermeture."
-            : "Pour réaliser un transfert, choisis le joueur de ton équipe que tu veux remplacer et sélectionne le joueur de ton choix dans la liste"}
-        </p>
         {!mode && <div className="tm-alert tm-alert--info">Aucune période de transfert n’est actuellement ouverte.</div>}
         {state.error && <div className="tm-alert tm-alert--error">{state.error}</div>}
         {state.success && <div className="tm-alert tm-alert--success">{state.success}</div>}
@@ -261,9 +236,18 @@ export function TransferManager({
       </div>
 
       <div className="tm-aside">
+      {selectedPlayerForModal && (
+        <PlayerPanel
+          player={{ id: selectedPlayerForModal.id, name: selectedPlayerForModal.name, clubName: selectedPlayerForModal.club, clubId: selectedPlayerForModal.clubId, position: selectedPlayerForModal.position, value: selectedPlayerForModal.value }}
+          onClose={() => setSelectedPlayerForModal(null)}
+        />
+      )}
       <aside className="tm-panel tm-panel--form" aria-label="Transferts">
         <header className="tm-panel-head">
-          <h2>Transferts</h2>
+          <h2>
+            Transferts
+            <HelpTip text={mode === "mercado" ? "La période de mercato est ouverte : clique sur « Ajouter un transfert » pour placer un ordre (4 maximum) avant la fermeture." : "Clique sur ton équipe (titulaires et remplaçants) pour choisir un joueur à vendre, puis sur la liste pour choisir celui à acheter. Ton budget doit rester positif pour valider."} />
+          </h2>
           <span className="tm-badge">{transfersAlreadyMade}/{quotaLimit}</span>
         </header>
         <div className="tm-panel-quota" aria-hidden="true">
@@ -369,17 +353,17 @@ export function TransferManager({
                   setPositionFilter((p) => (p === "ALL" ? "FW" : p === "FW" ? "MF" : p === "MF" ? "DF" : p === "DF" ? "GK" : "ALL"))
                 }
               >
-                Poste {requiredPosition ? `(${requiredPosition})` : positionFilter !== "ALL" ? `(${positionFilter})` : ""} <span>⌄</span>
+                Poste{requiredPosition ? ` (${requiredPosition})` : positionFilter !== "ALL" ? ` (${positionFilter})` : ""} <Chevron />
               </button>
               <button
                 type="button"
                 className="filter-pill-btn"
                 onClick={() => setInBudgetOnly((prev) => !prev)}
               >
-                Prix <span>⌄</span>
+                Prix <Chevron />
               </button>
               <button type="button" className="filter-pill-btn" onClick={() => setSearchQuery("")}>
-                Club <span>⌄</span>
+                Club <Chevron />
               </button>
             </div>
 
@@ -415,7 +399,7 @@ export function TransferManager({
                       className="catalogue-eye-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedPlayerForModal(player);
+                        setSelectedPlayerForModal((current) => (current?.id === player.id ? null : player));
                       }}
                       title="Détails du joueur"
                     >
@@ -549,49 +533,6 @@ export function TransferManager({
       </aside>
       </div>
 
-      {/* Quick Player Modal (when clicking eye icon) */}
-      {selectedPlayerForModal && (
-        <div className="player-modal-backdrop" onClick={() => setSelectedPlayerForModal(null)}>
-          <div className="player-modal-card" onClick={(e) => e.stopPropagation()}>
-            <header className="player-modal-header">
-              <img
-                src={getJerseyImage(selectedPlayerForModal.club)}
-                alt=""
-                className="player-modal-jersey"
-              />
-              <div>
-                <h3>{selectedPlayerForModal.name}</h3>
-                <p>
-                  {selectedPlayerForModal.club} · {selectedPlayerForModal.position}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="player-modal-close"
-                onClick={() => setSelectedPlayerForModal(null)}
-              >
-                ✕
-              </button>
-            </header>
-            <div className="player-modal-body">
-              <div className="modal-stat-pill">
-                <span>Valeur MarketFoot :</span>
-                <b>{formatCompactEuro(selectedPlayerForModal.value)}</b>
-              </div>
-              <button
-                type="button"
-                className="transfer-valider-btn is-enabled mt-3"
-                onClick={() => {
-                  if (!requiredPosition || selectedPlayerForModal.position === requiredPosition) setBoughtPlayerId(selectedPlayerForModal.id);
-                  setSelectedPlayerForModal(null);
-                }}
-              >
-                Sélectionner pour le transfert
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,12 +1,16 @@
 import "server-only";
 import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import { one } from "@/lib/supabase/relation";
+import { bonusCatalogue } from "@/lib/bonus-catalogue";
 
 export type RankCard = { label: string; rank: number | null; delta: number | null };
 export type TransferLine = { kind: "Mercato" | "Libre"; at: string; sold: string; soldValue: number; bought: string; boughtValue: number; delta: number };
 export type PlayerPrime = { position: "GK" | "DF" | "MF" | "FW"; name: string; amount: number };
+export type BonusResult = { id: string; title: string; image: string; text: string; /** null while the bonus has not been evaluated. */ succeeded: boolean | null; amount: number | null };
 export type HistoryRow = {
   day: number;
+  /** Bonus played on this matchday, if any. */
+  bonus: BonusResult | null;
   rank: number | null;
   rankDelta: number | null;
   dayRank: number | null;
@@ -69,9 +73,16 @@ export async function getPerformance(gamerId: string, seasonId?: string, selecte
     admin.from("settlement_player_effects").select("settlement_id,gamer_effect,player_id,matchday_squad_snapshots(is_starter,position),players(first_name,last_name)").eq("gamer_id", gamerId).in("settlement_id", settlementIds).is("reversed_at", null),
     admin.from("direct_transfers").select("created_at,sold_value,bought_value,matchday_id,sold:players!direct_transfers_sold_player_id_fkey(first_name,last_name),bought:players!direct_transfers_bought_player_id_fkey(first_name,last_name),squads!inner(gamer_id)").eq("status", "completed").eq("squads.gamer_id", gamerId),
     admin.from("mercado_orders").select("updated_at,submitted_sold_value,submitted_bought_value,matchday_id,sold:players!mercado_orders_sold_player_id_fkey(first_name,last_name),bought:players!mercado_orders_bought_player_id_fkey(first_name,last_name),squads!inner(gamer_id)").eq("status", "executed").eq("squads.gamer_id", gamerId),
-    admin.from("squads").select("squad_members(acquired_value)").eq("gamer_id", gamerId).maybeSingle(),
+    admin.from("squads").select("id,squad_members(acquired_value)").eq("gamer_id", gamerId).maybeSingle(),
     admin.from("gamer_finances").select("locked_account:blocked_account").eq("gamer_id", gamerId).maybeSingle(),
   ]);
+
+  const { data: bonusPlays } = squad?.id ? await admin.from("bonus_plays").select("matchday_id,bonus_id,succeeded,bonus_amount").eq("squad_id", squad.id).in("matchday_id", [...dayById.keys()]) : { data: [] as { matchday_id: string; bonus_id: string; succeeded: boolean | null; bonus_amount: number | string | null }[] };
+  const bonusByDay = new Map<number, BonusResult>();
+  for (const play of bonusPlays ?? []) {
+    const entry = bonusCatalogue.find((b) => b.id === play.bonus_id); const d = dayById.get(play.matchday_id);
+    if (entry && d !== undefined) bonusByDay.set(d, { id: entry.id, title: entry.title, image: entry.image, text: entry.text, succeeded: play.succeeded, amount: play.bonus_amount === null ? null : Number(play.bonus_amount) });
+  }
 
   const snapByDay = new Map((snapshots ?? []).map((s) => [settlementDay.get(s.settlement_id)!, s]));
   const gamersByDay = new Map<number, number>();
@@ -123,7 +134,7 @@ export async function getPerformance(gamerId: string, seasonId?: string, selecte
     const snap = snapByDay.get(d); const before = snapByDay.get(d - 1);
     const det = primesByDay.get(d);
     return {
-      day: d, rank: snap ? snap.general_rank : null, rankDelta: snap && before ? before.general_rank - snap.general_rank : null, dayRank: dayRank(d),
+      day: d, bonus: bonusByDay.get(d) ?? null, rank: snap ? snap.general_rank : null, rankDelta: snap && before ? before.general_rank - snap.general_rank : null, dayRank: dayRank(d),
       starters: myEffect.get(d) ?? 0, predictions: predByDay.get(d) ?? 0, total: (myEffect.get(d) ?? 0) + (predByDay.get(d) ?? 0), trophies: [],
       transfers: (transfersByDay.get(d) ?? []).sort((a, b) => a.at.localeCompare(b.at)), startersDetail: det?.starters ?? [], benchDetail: det?.bench ?? [],
     };

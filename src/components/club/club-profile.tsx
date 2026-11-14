@@ -2,12 +2,12 @@ import Link from "next/link";
 
 import { getJerseyImage } from "@/lib/jersey-map";
 
-export type ClubPlayerRow = { id: string; name: string; position: string; order: number; value: number; matches: number; starters: number; goals: number; ownGoals: number; assists: number; penalties: number; yellow: number; red: number };
+export type ClubPlayerRow = { id: string; name: string; position: string; order: number; value: number; matches: number; starters: number; goals: number; ownGoals: number; assists: number; penalties: number; penaltiesMissed: number; yellow: number; red: number };
 export type ClubFixtureTeam = { id: string; name: string; short?: string; score: number | null };
 export type ClubFixture = { id: string; matchdayId: string; day: number; kickoff: string; home: ClubFixtureTeam; away: ClubFixtureTeam; postponed: boolean };
-export type ClubSort = "matches" | "starters" | "goals" | "ownGoals" | "assists" | "penalties" | "yellow" | "red" | "value";
+export type ClubSort = "matches" | "starters" | "goals" | "ownGoals" | "assists" | "penalties" | "penaltiesMissed" | "yellow" | "red" | "value";
 
-const eur = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M€`;
+const eur = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
 const when = (iso: string) => {
   const parts = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).formatToParts(new Date(iso));
   const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
@@ -24,6 +24,7 @@ const columns: { key: ClubSort; label?: string; icon?: string }[] = [
   { key: "ownGoals", icon: "csc" },
   { key: "assists", icon: "boot" },
   { key: "penalties", icon: "net" },
+  { key: "penaltiesMissed", icon: "rednet" },
   { key: "yellow", icon: "yellow" },
   { key: "red", icon: "red" },
 ];
@@ -32,7 +33,7 @@ function HeadIcon({ name }: { name: string }) {
   if (name === "yellow") return <i className="cp-card cp-card--yellow" />;
   if (name === "red") return <i className="cp-card cp-card--red" />;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img className={`cp-icon cp-icon--${name}`} src={`/images/club/${name}.png`} alt="" />;
+  return <img className={`cp-icon cp-icon--${name}`} src={name === "rednet" ? "/images/players/rednet.png" : `/images/club/${name}.png`} alt="" />;
 }
 
 type Props = {
@@ -91,6 +92,7 @@ export function ClubProfile({ clubId, clubName, rows, fixtures, sort, showAll, b
             <span className="cp-c-num">{row.ownGoals}</span>
             <span className="cp-c-num">{row.assists}</span>
             <span className="cp-c-num">{row.penalties}</span>
+            <span className="cp-c-num">{row.penaltiesMissed}</span>
             <span className="cp-c-num">{row.yellow}</span>
             <span className="cp-c-num">{row.red}</span>
             <span className="cp-c-value">{eur(row.value)}</span>

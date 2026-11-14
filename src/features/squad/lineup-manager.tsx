@@ -5,8 +5,9 @@ import { Bench, DisplayModeSwitch, Pitch, PlayerCard, type DisplayMode, type Pit
 import { TeamTabs } from "@/components/team/team-tabs";
 import { BonusPanel, type BonusState } from "@/components/team/bonus-panel";
 import { CaptainPanel } from "@/components/team/captain-panel";
+import { PlayerPanel } from "@/components/team/player-panel";
 
-export type SquadMemberView = { id:string; name:string; position:string; value:number; isStarter:boolean; isCaptain:boolean; frozen?:boolean; clubName?:string; acquiredValue?:number; owners?:number; captainUses?:number; };
+export type SquadMemberView = { id:string; name:string; position:string; value:number; isStarter:boolean; isCaptain:boolean; frozen?:boolean; clubName?:string; clubId?:string; valueHistory?:{at:string;before:number}[]; acquiredValue?:number; owners?:number; captainUses?:number; };
 const formation:Record<string,number>={FW:3,MF:3,DF:4,GK:1};
 
 export function LineupManager({
@@ -14,21 +15,28 @@ export function LineupManager({
   matchdayId = null,
   activeTab = "composition",
   bonus,
+  lastMercatoAt = null,
 }: {
   members?: SquadMemberView[];
   matchdayId?: string | null;
   activeTab?: string;
   bonus?: BonusState;
+  /** End of the last executed transfer window (ISO), the default "since" of the speculation view. */
+  lastMercatoAt?: string | null;
 }) {
   const [starters,setStarters]=useState(()=>new Set(members.some(m=>m.isStarter)?members.filter(m=>m.isStarter).map(m=>m.id):Object.entries(formation).flatMap(([position,count])=>members.filter(m=>m.position===position).slice(0,count).map(m=>m.id))));
   const [captainId,setCaptainId]=useState(members.find(m=>m.isCaptain)?.id??"");
   const [selected,setSelected]=useState<string|null>(null);
   const [mode,setMode]=useState<DisplayMode>("value");
+  const [openPlayerId,setOpenPlayerId]=useState<string|null>(null);
+  const [specPeriod,setSpecPeriod]=useState<"mercato"|"date">("mercato");
+  const [specDate,setSpecDate]=useState("");
   const [interactionMessage,setInteractionMessage]=useState<string|undefined>();
   
   const [state,setState]=useState<LineupActionState>({});
   const [pending,startTransition]=useTransition();
   const selectedPlayer=members.find(m=>m.id===selected);
+  const openPlayer=members.find(m=>m.id===openPlayerId);
 
   const persistLineup=(nextStarters:Set<string>,nextCaptainId:string,previousStarters=new Set(starters),previousCaptainId=captainId)=>{
     if(!matchdayId){setState({error:"Aucune journée ouverte ne permet actuellement d’enregistrer votre équipe."});return;}
@@ -86,13 +94,20 @@ export function LineupManager({
     persistLineup(nextStarters,nextCaptainId,previousStarters,previousCaptainId);
   };
   
+  // Value the player had at the start of the chosen period: the value before the first change after it.
+  // No period (no Mercato yet, no date picked) falls back to the value at purchase.
+  const valueSince=(member:SquadMemberView)=>{
+    const since=specPeriod==="date"?(specDate?new Date(`${specDate}T00:00:00`).getTime():null):(lastMercatoAt?Date.parse(lastMercatoAt):null);
+    if(since===null||Number.isNaN(since))return member.acquiredValue??member.value;
+    const next=(member.valueHistory??[]).find(h=>Date.parse(h.at)>since);
+    return next?next.before:member.value;
+  };
   const toPitchPlayer=(member:SquadMemberView):PitchPlayer=>{
     const acquired=member.acquiredValue??member.value;
     return {
-      id:member.id,name:member.name,clubName:member.clubName,value:member.value,
+      id:member.id,name:member.name,clubName:member.clubName,clubId:member.clubId,value:member.value,
       changePct:acquired>0?((member.value-acquired)/acquired)*100:0,
-      // Until a "since last Mercato" snapshot exists, speculation is the gain since purchase.
-      speculation:member.value-acquired,
+      speculation:member.value-valueSince(member),
       owners:member.owners,
       isCaptain:captainId===member.id||(Boolean(member.isCaptain)&&!captainId),
       frozen:member.frozen,
@@ -108,7 +123,7 @@ export function LineupManager({
     return <PlayerCard key={key} player={toPitchPlayer(member)} position={position} mode={mode}
       state={{selected:selected===member.id,eligible,ineligible}}
       disabled={pending||member.frozen||(activeTab==="capitaine"&&isBench)||ineligible}
-      onSelect={()=>choose(member)}/>;
+      onSelect={()=>choose(member)} onOpenPlayer={setOpenPlayerId}/>;
   };
 
   const positionOrder = ["FW", "MF", "DF", "GK"];
@@ -122,25 +137,30 @@ export function LineupManager({
   });
 
   return (
-    <div className="tm-workspace">
+    <div className={`tm-workspace${openPlayer?" tm-workspace--with-player":""}`}>
       <div className="tm-main">
         <TeamTabs active={activeTab==="capitaine"?"capitaine":"composition"}/>
 
         <form onSubmit={(event)=>{event.preventDefault();persistLineup(new Set(starters),captainId);}} noValidate id="lineup-form">
           <input type="hidden" name="lineup" value={JSON.stringify({ starterIds: [...starters], captainId, matchdayId })}/>
           <DisplayModeSwitch mode={mode} onChange={setMode}/>
+          {mode==="speculation"&&(
+            <div className="tm-spec">
+              <label>Spéculation&nbsp;
+                <select value={specPeriod} onChange={(e)=>setSpecPeriod(e.target.value as "mercato"|"date")}>
+                  <option value="mercato">Depuis le dernier mercato</option>
+                  <option value="date">Depuis le…</option>
+                </select>
+              </label>
+              {specPeriod==="date"&&<input type="date" value={specDate} onChange={(e)=>setSpecDate(e.target.value)} aria-label="Depuis le"/>}
+            </div>
+          )}
           <div className="tm-field">
             <Pitch rows={pitchRows}/>
             <Bench rows={benchRows}/>
           </div>
         </form>
 
-        {activeTab === "composition" && (
-          <p className="tm-note">Pour changer ta compo, clique sur un titulaire et choisis son remplaçant parmi les joueurs de ton banc de touche. Les deux joueurs doivent jouer au même poste.</p>
-        )}
-        {activeTab === "capitaine" && (
-          <p className="tm-note">Choisis ton capitaine parmi tes titulaires : ses primes seront doublées lors de la prochaine journée. Chaque joueur ne peut être capitaine que 6 fois par saison.</p>
-        )}
 
         {!matchdayId && <div className="tm-alert tm-alert--info">Aucune journée ouverte ne permet actuellement d’enregistrer.</div>}
         {(state.error || interactionMessage) && <div className="tm-alert tm-alert--error">{state.error ?? interactionMessage}</div>}
@@ -150,10 +170,12 @@ export function LineupManager({
       </div>
 
       <div className="tm-aside">
+        {openPlayer&&<PlayerPanel player={{id:openPlayer.id,name:openPlayer.name,clubName:openPlayer.clubName,clubId:openPlayer.clubId,position:openPlayer.position,value:openPlayer.value,acquiredValue:openPlayer.acquiredValue,owners:openPlayer.owners}} onClose={()=>setOpenPlayerId(null)}/>}
         {activeTab === "capitaine" ? (
           <CaptainPanel
             players={members.filter((m) => starters.has(m.id)).map((m) => ({ id: m.id, name: m.name, clubName: m.clubName, captainUses: m.captainUses ?? 0, frozen: m.frozen }))}
             selectedId={captainId}
+            onOpenPlayer={(id) => setOpenPlayerId(id)}
             onSelect={(id) => { const member = members.find((m) => m.id === id); if (member) chooseCaptain(member); }}
             disabled={pending || !matchdayId}
           />

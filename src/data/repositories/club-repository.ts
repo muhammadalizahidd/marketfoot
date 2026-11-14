@@ -1,12 +1,13 @@
 import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { clubCode } from "@/lib/club-codes";
 import { one } from "@/lib/supabase/relation";
 import type { ClubFixture, ClubPlayerRow } from "@/components/club/club-profile";
 
 const positionOrder = { GK: 0, DF: 1, MF: 2, FW: 3 } as const;
 const posLetter = { GK: "G", DF: "D", MF: "M", FW: "A" } as const;
-type Totals = { matches: number; starters: number; goals: number; ownGoals: number; assists: number; penalties: number; yellow: number; red: number };
-const empty = (): Totals => ({ matches: 0, starters: 0, goals: 0, ownGoals: 0, assists: 0, penalties: 0, yellow: 0, red: 0 });
+type Totals = { matches: number; starters: number; goals: number; ownGoals: number; assists: number; penalties: number; penaltiesMissed: number; yellow: number; red: number };
+const empty = (): Totals => ({ matches: 0, starters: 0, goals: 0, ownGoals: 0, assists: 0, penalties: 0, penaltiesMissed: 0, yellow: 0, red: 0 });
 
 /** Real football club: squad with season statistics and the season calendar (current season). */
 export async function getClubProfile(clubId: string) {
@@ -21,14 +22,14 @@ export async function getClubProfile(clubId: string) {
     db.from("clubs").select("id,name,short_name"),
   ]);
   const ids = (players ?? []).map((player) => player.id);
-  const { data: stats } = ids.length ? await db.from("player_match_stats").select("player_id,started,minutes_played,goals,own_goals,assists,penalties_scored,yellow_cards,red_cards").in("player_id", ids) : { data: [] };
+  const { data: stats } = ids.length ? await db.from("player_match_stats").select("player_id,started,minutes_played,goals,own_goals,assists,penalties_scored,penalties_missed,yellow_cards,red_cards").in("player_id", ids) : { data: [] };
   const totals = new Map<string, Totals>();
   for (const stat of stats ?? []) {
     const current = totals.get(stat.player_id) ?? empty();
     current.matches += stat.minutes_played > 0 ? 1 : 0;
     current.starters += stat.started ? 1 : 0;
     current.goals += stat.goals; current.ownGoals += stat.own_goals; current.assists += stat.assists;
-    current.penalties += stat.penalties_scored; current.yellow += stat.yellow_cards; current.red += stat.red_cards;
+    current.penalties += stat.penalties_scored; current.penaltiesMissed += stat.penalties_missed ?? 0; current.yellow += stat.yellow_cards; current.red += stat.red_cards;
     totals.set(stat.player_id, current);
   }
   const rows: ClubPlayerRow[] = (players ?? []).map((player) => ({
@@ -40,7 +41,7 @@ export async function getClubProfile(clubId: string) {
     ...(totals.get(player.id) ?? empty()),
   }));
   const names = new Map((clubs ?? []).map((item) => [item.id, item.name]));
-  const shorts = new Map((clubs ?? []).map((item) => [item.id, item.short_name || item.name]));
+  const shorts = new Map((clubs ?? []).map((item) => [item.id, clubCode(item.name)]));
   const fixtures: ClubFixture[] = (matches ?? []).filter((match) => one(match.matchdays)?.season_id === season?.id).map((match) => {
     const day = one(match.matchdays)!;
     return {

@@ -3,8 +3,8 @@ import Link from "next/link";
 import type { Performance } from "@/data/repositories/performance-repository";
 import { HistoryTable } from "./history-table";
 
-const M = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M€`;
-const M1 = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })} M€`;
+const M = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
+const M1 = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
 const money = (value: number) => (Math.abs(value) >= 1_000_000 ? M(value) : `${Math.round(value / 1000).toLocaleString("fr-FR")} k€`);
 const sign = (value: number) => (value > 0 ? "+ " : value < 0 ? "- " : "");
 const tone = (value: number) => (value > 0 ? "is-up" : value < 0 ? "is-down" : "");

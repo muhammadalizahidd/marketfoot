@@ -4,17 +4,18 @@
 .cp-head { display: flex; align-items: center; height: 40px; padding: 0 0 0 12px; background: #f5f5f5; font-size: 10px; color: #7b7b7b; }
 .cp-head > *, .cp-row > * { flex-shrink: 0; }
 .cp-c-name { width: 158px; }
-.cp-c-pos { width: 72.5px; }
-.cp-c-num { width: 72.5px; display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
+.cp-c-pos { width: 66px; }
+.cp-c-num { width: 66px; display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
 .cp-c-value { width: 64.5px; margin-left: 0; text-align: right; color: inherit; text-decoration: none; }
 .cp-head .cp-c-value { display: inline-flex; align-items: center; justify-content: flex-start; margin-left: 0; }
 .cp-head a:hover { color: #0b5fff; }
 .cp-chev { margin-left: 2px; color: #0b5fff; }
 .cp-icon { height: 14px; width: auto; display: block; }
 .cp-icon--boot { height: 10px; }
+.cp-head .cp-c-num { gap: 2px; }
 .cp-card { display: block; width: 10px; height: 15.5px; border-radius: 1px; }
-.cp-card--yellow { background: #ffe600; margin-left: 10px; }
-.cp-card--red { background: #e60000; margin-left: 9px; }
+.cp-card--yellow { background: #ffe600; border: 0.5px solid #000; box-sizing: border-box; }
+.cp-card--red { background: #e60000; border: 0.5px solid #000; box-sizing: border-box; }
 
 .cp-all { display: flex; align-items: center; height: 40px; padding: 0 12px; gap: 4px; font-size: 12px; color: #121212; text-decoration: none; }
 .cp-check { width: 9px; height: 9px; box-sizing: border-box; border: 1.3px solid #333; border-radius: 2px; margin-right: 2px; position: relative; }

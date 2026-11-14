@@ -21,10 +21,11 @@ html {
   scrollbar-width: thin;
 }
 
-*::-webkit-scrollbar { width: 0.75rem; height: 0.75rem; }
-*::-webkit-scrollbar-track { background: var(--color-canvas); }
-*::-webkit-scrollbar-thumb { background: #4a566c; border: 3px solid var(--color-canvas); border-radius: 999px; }
-*::-webkit-scrollbar-thumb:hover { background: #738199; }
+* { scrollbar-width: thin; scrollbar-color: #c3cad6 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #c3cad6; border: 2px solid transparent; background-clip: padding-box; border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: #9aa5b8; background-clip: padding-box; }
 
 body { min-height: 100dvh; margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--color-canvas); }
 a { color: inherit; }

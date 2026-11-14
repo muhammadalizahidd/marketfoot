@@ -9,9 +9,9 @@ import type { TopMover } from "@/data/repositories/players-repository";
 
 export type SidebarRankingRow = { rank: number; username: string; wealth: number; isMe: boolean };
 
-const eur = (value: number, digits = 2) => `${value.toLocaleString("fr-FR", { minimumFractionDigits: digits, maximumFractionDigits: digits })} M€`;
+const eur = (value: number, digits = 3) => `${value.toLocaleString("fr-FR", { minimumFractionDigits: digits, maximumFractionDigits: digits })} M€`;
 const millions = (value: number) => eur(value / 1_000_000);
-const millionsTrim = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} M€`;
+const millionsTrim = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
 
 type AppShellProps = {
   children: ReactNode;
@@ -24,6 +24,8 @@ type AppShellProps = {
   topBuys?: TopMover[];
   topSells?: TopMover[];
   avatarUrl?: string | null;
+  /** Trophy the manager selected on the Palmarès page; the slot stays empty without one. */
+  trophyImage?: string | null;
   userId?: string;
 };
 
@@ -46,7 +48,7 @@ function Movers({ items, tone }: { items: TopMover[]; tone: "up" | "down" }) {
   );
 }
 
-export function AppShell({ children, username, budget, wealth, leaderboard = [], topBuys = [], topSells = [], avatarUrl, userId }: AppShellProps) {
+export function AppShell({ children, username, budget, wealth, leaderboard = [], topBuys = [], topSells = [], avatarUrl, trophyImage, userId }: AppShellProps) {
   return (
     <div className="ms-shell">
       <AppHeader />
@@ -70,7 +72,7 @@ export function AppShell({ children, username, budget, wealth, leaderboard = [],
               <span className="ms-account-label">Mon effectif :</span>
               <div className="ms-account-value">
                 <span>{wealth !== undefined ? millions(wealth - budget) : "—"}</span>
-                <span className="ms-ball" aria-hidden="true" />
+                <span className="ms-trophy" aria-hidden="true">{trophyImage ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={trophyImage} alt="" /> : null}</span>
               </div>
               <div className="ms-account-budget"><span>Budget :</span><b>{millionsTrim(budget)}</b></div>
             </div>

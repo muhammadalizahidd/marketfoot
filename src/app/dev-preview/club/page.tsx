@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { sidebarFixture } from "../_fixtures";
 
 const p = (id: string, name: string, position: string, order: number, matches: number, starters: number, goals: number, ownGoals: number, assists: number, penalties: number, yellow: number, red: number, value: number): ClubPlayerRow =>
-  ({ id, name, position, order, matches, starters, goals, ownGoals, assists, penalties, yellow, red, value });
+  ({ id, name, position, order, matches, starters, goals, ownGoals, assists, penalties, penaltiesMissed: 0, yellow, red, value });
 const field = (id: string, name: string, position: string, order: number) => p(id, name, position, order, 22, 17, 12, 12, 7, 4, 1, 0, 11_540_000);
 const rows: ClubPlayerRow[] = [
   p("1", "M. Safonov", "G", 0, 22, 17, 0, 0, 1, 4, 0, 28, 14_850_000),

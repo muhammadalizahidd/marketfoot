@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { Bench, DisplayModeSwitch, Pitch, PlayerCard, type DisplayMode, type PitchPlayer } from "@/components/team/pitch";
+import { HelpTip } from "@/components/team/help-tip";
 import { TeamTabs } from "@/components/team/team-tabs";
 import { PredictionChoice } from "./prediction-choice";
 
@@ -106,13 +107,15 @@ export function PredictionWorkspace({
           <Pitch rows={pitchRows} />
           <Bench rows={benchRows} />
         </div>
-        <p className="tm-note">Pour valider tes pronostics, il te suffit de remplir la grille.</p>
       </div>
 
       <div className="tm-aside">
       <aside className="tm-panel prediction-drawer" aria-label="Grille de pronostics">
         <header className="tm-panel-head">
-          <h2>Pronostics</h2>
+          <h2>
+            Pronostics
+            <HelpTip text="Pour valider tes pronostics, il te suffit de remplir la grille : 1 = victoire à domicile, N = match nul, 2 = victoire à l’extérieur." />
+          </h2>
           <nav className="prediction-matchday" aria-label="Changer de journée">
             {previousMatchdayHref ? <Link href={previousMatchdayHref} aria-label="Journée précédente">‹</Link> : <span aria-hidden="true">‹</span>}
             <b>J{matchdayNumber ?? "—"}</b>
@@ -128,7 +131,7 @@ export function PredictionWorkspace({
                 <time dateTime={fixture.kickoffAt}>{formatKickoff(fixture.kickoffAt)}</time>
                 {fixture.postponed && <p>Match reporté</p>}
               </div>
-              <PredictionChoice matchId={fixture.id} choice={fixture.choice} closed={fixture.closed} />
+              <PredictionChoice matchId={fixture.id} choice={fixture.choice} closed={fixture.closed} outcome={fixture.outcome} />
             </article>
           ))}
           {!fixtures.length && <p className="prediction-drawer-empty">Aucun match programmé pour cette journée.</p>}

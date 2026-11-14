@@ -4,7 +4,7 @@
 .gp-top { display: flex; justify-content: space-between; align-items: center; height: 42px; }
 .gp-tabs { box-sizing: border-box; height: 42px; padding: 5px 8px; display: flex; border: 1px solid #dfe8fa; border-radius: 10px; background: #e9f0fe; }
 .gp-tabs a { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 30px; border-radius: 6px; font-size: 14px; }
-.gp-tabs a.is-active { background: #fff; color: #0b5fff; font-weight: 700; box-shadow: 0 1px 3px rgba(11, 95, 255, 0.12); }
+.gp-tabs a.is-active { background: #fff; color: #0b5fff; font-weight: 700; }
 .gp-tabs i { font-style: normal; min-width: 24px; height: 20px; padding: 0 6px; box-sizing: border-box; display: inline-grid; place-items: center; border-radius: 10px; background: #e3ecfd; color: #0b5fff; font-size: 13px; font-weight: 700; }
 .gp-season { box-sizing: border-box; width: 146px; height: 31px; display: inline-flex; align-items: center; justify-content: space-between; padding: 0 9px; border: 1px solid #e0e0e0; border-radius: 16px; font-size: 9.5px; background: #fff; white-space: nowrap; overflow: hidden; }
 .gp-season svg { color: #0b5fff; }

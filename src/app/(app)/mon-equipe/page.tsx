@@ -20,10 +20,15 @@ export default async function MyTeamPage({ searchParams }: { searchParams: Promi
   if (!squad) return <main className="app-page"><section className="empty-state"><h1>Votre équipe n’est pas encore créée</h1><p>Composez votre effectif de 19 joueurs pour commencer.</p><Link className="primary-action" href="/onboarding">Créer mon équipe</Link></section></main>;
   const db = createSupabaseAdminClient();
   const playerIds = (squad.squad_members ?? []).map((m) => m.player_id);
-  const [{ data: current }, { data: holderRows }] = await Promise.all([
+  const [{ data: current }, { data: holderRows }, { data: lastRun }, { data: valueRows }] = await Promise.all([
     db.from("matchdays").select("id").in("status", ["open", "mercado"]).order("number").limit(1).maybeSingle(),
     playerIds.length ? db.from("squad_members").select("player_id").in("player_id", playerIds) : Promise.resolve({ data: [] as { player_id: string }[] }),
+    db.from("mercado_runs").select("executed_at").eq("status", "completed").not("executed_at", "is", null).order("executed_at", { ascending: false }).limit(1).maybeSingle(),
+    playerIds.length ? db.from("player_value_history").select("player_id,previous_value,created_at").eq("value_kind", "marketfoot_value").in("player_id", playerIds).order("created_at") : Promise.resolve({ data: [] as { player_id: string; previous_value: number | string; created_at: string }[] }),
   ]);
+  // Value changes per player: the value "since" a date is the value before the first change after that date.
+  const valueHistory = new Map<string, { at: string; before: number }[]>();
+  for (const row of valueRows ?? []) valueHistory.set(row.player_id, [...(valueHistory.get(row.player_id) ?? []), { at: row.created_at, before: Number(row.previous_value) }]);
   const { data: fixtures } = current ? await db.from("matches").select("home_club_id,away_club_id,kickoff_at").eq("matchday_id", current.id) : { data: [] };
   const { settings } = await ensureRulesSettings();
   const { data: season } = await db.from("seasons").select("id").eq("is_current", true).maybeSingle();
@@ -41,6 +46,6 @@ export default async function MyTeamPage({ searchParams }: { searchParams: Promi
   const owners = new Map<string, number>();
   for (const row of holderRows ?? []) owners.set(row.player_id, (owners.get(row.player_id) ?? 0) + 1);
   const frozen = new Set((fixtures ?? []).filter((m) => isTeamFrozen(new Date(m.kickoff_at), new Date())).flatMap((m) => [m.home_club_id, m.away_club_id]));
-  const members: SquadMemberView[] = (squad.squad_members ?? []).map((m) => ({ id: m.player_id, name: `${one(m.players)?.first_name ?? ""} ${one(m.players)?.last_name ?? ""}`.trim(), position: one(m.players)?.position ?? "—", value: Number(one(m.players)?.marketfoot_value ?? m.acquired_value), isStarter: m.is_starter, isCaptain: m.is_captain, frozen: frozen.has(one(m.players)?.club_id ?? ""), clubName: one(one(m.players)?.clubs)?.name ?? "", acquiredValue: Number(m.acquired_value), owners: owners.get(m.player_id) ?? 1 }));
-  return <main className="app-page" style={{ padding: 0 }}><LineupManager activeTab={active} members={members} matchdayId={current?.id ?? null} bonus={bonus}/></main>;
+  const members: SquadMemberView[] = (squad.squad_members ?? []).map((m) => ({ id: m.player_id, name: `${one(m.players)?.first_name ?? ""} ${one(m.players)?.last_name ?? ""}`.trim(), position: one(m.players)?.position ?? "—", value: Number(one(m.players)?.marketfoot_value ?? m.acquired_value), isStarter: m.is_starter, isCaptain: m.is_captain, frozen: frozen.has(one(m.players)?.club_id ?? ""), clubName: one(one(m.players)?.clubs)?.name ?? "", clubId: one(m.players)?.club_id ?? undefined, acquiredValue: Number(m.acquired_value), owners: owners.get(m.player_id) ?? 1, valueHistory: valueHistory.get(m.player_id) ?? [] }));
+  return <main className="app-page" style={{ padding: 0 }}><LineupManager activeTab={active} members={members} matchdayId={current?.id ?? null} bonus={bonus} lastMercatoAt={lastRun?.executed_at ?? null}/></main>;
 }

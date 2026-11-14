@@ -5,7 +5,7 @@ import type { ActivityEvent, MatchRow, PlayerProfile } from "@/data/repositories
 import { PlayerActivityView, PlayerProfileView, type ActivityFilter } from "@/features/players/player-profile";
 import { sidebarFixture } from "../_fixtures";
 
-const row = (day: number, kickoff: string, home: string, away: string, hs: number, as: number, result: MatchRow["result"], extra: Partial<MatchRow>): MatchRow => ({
+const row = (day: number, kickoff: string, home: string, away: string, hs: number, as: number, result: MatchRow["result"], extra: Partial<MatchRow>): MatchRow => ({ homeId: "home", awayId: "away", matchHref: "/ligue-1",
   day, kickoff, home, away, homeScore: hs, awayScore: as, result, minutes: 90, started: true, substitutedOut: false, played: true, goals: 0, assists: 0, cleanSheet: false, yellow: 0, red: 0, ownGoals: 0, total: 0, lines: [], ...extra,
 });
 const rows: MatchRow[] = [

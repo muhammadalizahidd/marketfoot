@@ -10,6 +10,10 @@ export type MatchRow = {
   kickoff: string;
   home: string;
   away: string;
+  homeId: string;
+  awayId: string;
+  /** Link target of the match page on /ligue-1. */
+  matchHref: string;
   homeScore: number;
   awayScore: number;
   /** Result from the player's club point of view. */
@@ -50,7 +54,7 @@ export type PlayerProfile = {
   rows: MatchRow[];
 };
 
-type Matchday = { number: number; season_id: string };
+type Matchday = { id: string; number: number; season_id: string };
 type Fixture = { id: string; kickoff_at: string; home_club_id: string; away_club_id: string; home_score: number | null; away_score: number | null; is_postponed: boolean; matchdays: Matchday | Matchday[] | null };
 
 const startOfParisDay = () => {
@@ -73,7 +77,7 @@ export async function getPlayerProfile(playerId: string, userId?: string): Promi
   const [{ data: history }, { data: stats }, { data: fixtures }, { data: clubs }, { count: holders }, owned, { data: boughtDirect }, { data: soldDirect }, { data: boughtOrders }, { data: soldOrders }] = await Promise.all([
     db.from("player_value_history").select("id,value_kind,reason,previous_value,next_value,created_at").eq("player_id", playerId).order("created_at"),
     db.from("player_match_stats").select("match_id,started,minutes_played,goals,assists,own_goals,yellow_cards,red_cards,penalties_scored,penalties_missed,penalties_saved,saves,substitutions_out").eq("player_id", playerId),
-    db.from("matches").select("id,kickoff_at,home_club_id,away_club_id,home_score,away_score,is_postponed,matchdays!inner(number,season_id)").or(`home_club_id.eq.${clubId},away_club_id.eq.${clubId}`).order("kickoff_at"),
+    db.from("matches").select("id,kickoff_at,home_club_id,away_club_id,home_score,away_score,is_postponed,matchdays!inner(id,number,season_id)").or(`home_club_id.eq.${clubId},away_club_id.eq.${clubId}`).order("kickoff_at"),
     db.from("clubs").select("id,name,short_name"),
     db.from("squad_members").select("player_id", { count: "exact", head: true }).eq("player_id", playerId),
     userId ? db.from("squad_members").select("acquired_value,acquired_at,squads!inner(gamer_id)").eq("player_id", playerId).eq("squads.gamer_id", userId).maybeSingle() : Promise.resolve({ data: null }),
@@ -82,7 +86,7 @@ export async function getPlayerProfile(playerId: string, userId?: string): Promi
     db.from("mercado_orders").select("updated_at").eq("bought_player_id", playerId).eq("status", "executed"),
     db.from("mercado_orders").select("updated_at").eq("sold_player_id", playerId).eq("status", "executed"),
   ]);
-  const shorts = new Map((clubs ?? []).map((item) => [item.id, item.short_name || item.name]));
+  const shorts = new Map((clubs ?? []).map((item) => [item.id, clubCode(item.name)]));
   const statByMatch = new Map((stats ?? []).map((stat) => [stat.match_id, stat]));
   const ownMatches = ((fixtures ?? []) as unknown as Fixture[]).filter((match) => one(match.matchdays)?.season_id === season?.id && !match.is_postponed && match.home_score !== null && match.away_score !== null);
 
@@ -100,7 +104,7 @@ export async function getPlayerProfile(playerId: string, userId?: string): Promi
     if (input.minutesPlayed === 0) Object.assign(input, { started: false, goals: 0, assists: 0, ownGoals: 0, yellowCards: 0, redCards: 0, penaltiesScored: 0, penaltiesMissed: 0, penaltiesSaved: 0, saves: 0, substitutionsOut: 0 });
     const explained = explainPlayerMatchEffect(player.position, input, teamResultEffects[teamResultOf(isHome, goalsFor, goalsAgainst)]);
     return {
-      day: one(match.matchdays)!.number, kickoff: match.kickoff_at, home: shorts.get(match.home_club_id) ?? "—", away: shorts.get(match.away_club_id) ?? "—", homeScore: match.home_score!, awayScore: match.away_score!,
+      day: one(match.matchdays)!.number, kickoff: match.kickoff_at, homeId: match.home_club_id, awayId: match.away_club_id, matchHref: `/ligue-1?${new URLSearchParams({ season: one(match.matchdays)!.season_id, day: one(match.matchdays)!.id, view: "results", match: match.id })}`, home: shorts.get(match.home_club_id) ?? "—", away: shorts.get(match.away_club_id) ?? "—", homeScore: match.home_score!, awayScore: match.away_score!,
       result: (goalsFor > goalsAgainst ? "win" : goalsFor < goalsAgainst ? "loss" : "draw") as MatchRow["result"], minutes: input.minutesPlayed, started: input.started, substitutedOut: (input.substitutionsOut ?? 0) > 0, played: input.minutesPlayed > 0,
       goals: input.goals, assists: input.assists, cleanSheet: input.minutesPlayed > 0 && goalsAgainst === 0 && (player.position === "GK" || player.position === "DF"), yellow: input.yellowCards, red: input.redCards, ownGoals: input.ownGoals,
       total: explained.total, lines: explained.lines,
@@ -123,7 +127,7 @@ export async function getPlayerProfile(playerId: string, userId?: string): Promi
   const sells = count(soldDirect) + count(soldOrders);
 
   return {
-    id: player.id, firstName: player.first_name ?? "", lastName: player.last_name, position: player.position, club: { id: clubId, name: club?.name ?? "", short: club?.short_name ?? club?.name ?? "", code: clubCode(club?.name) },
+    id: player.id, firstName: player.first_name ?? "", lastName: player.last_name, position: player.position, club: { id: clubId, name: club?.name ?? "", short: clubCode(club?.name), code: clubCode(club?.name) },
     value, initialValue, changePct: initialValue ? ((value - initialValue) / initialValue) * 100 : 0, form: lastFive, holders: holders ?? 0,
     owned: owner ? { acquiredValue: Number(owner.acquired_value), acquiredAt: owner.acquired_at } : null,
     primes: rows.reduce((sum, row) => sum + row.total, 0),
@@ -156,5 +160,5 @@ export async function getPlayerActivity(playerId: string) {
     events.push({ id: row.id, at: row.created_at, kind, label, impact: Number(row.next_value) - Number(row.previous_value), value: Number(row.next_value) });
   }
   const club = one(player.clubs);
-  return { id: player.id as string, firstName: (player.first_name ?? "") as string, lastName: player.last_name as string, clubId: player.club_id as string, clubName: club?.name ?? "", clubShort: club?.short_name ?? club?.name ?? "", events };
+  return { id: player.id as string, firstName: (player.first_name ?? "") as string, lastName: player.last_name as string, clubId: player.club_id as string, clubName: club?.name ?? "", clubShort: clubCode(club?.name), events };
 }

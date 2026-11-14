@@ -15,7 +15,7 @@
 .gp-tsection h3 { margin: 0 0 8px; font-size: 11px; font-weight: 700; }
 .gp-tgrid { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
 .gp-tgrid:first-of-type { margin-top: 0; }
-.gp-tile { position: relative; box-sizing: border-box; height: 106px; border-radius: 6px; background: #eeeeee; color: #b4b4b4; }
+.gp-tile { position: relative; box-sizing: border-box; height: 120px; padding-bottom: 12px; border-radius: 6px; background: #eeeeee; color: #b4b4b4; }
 .gp-tile > div, .gp-tile > form, .gp-tile button { display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; border: 0; padding: 0; background: transparent; font: inherit; color: inherit; }
 .gp-tile button { cursor: pointer; }
 .gp-tile img { margin-top: 10px; height: 54px; width: auto; max-width: 80px; object-fit: contain; }
@@ -127,3 +127,10 @@ button.gp-srow { height: 30px; border: 0; background: transparent; font: inherit
   .gp-tgrid { grid-template-columns: repeat(4, 1fr); }
   .gp-stats { grid-template-columns: 1fr; }
 }
+
+.gp-bonus-card { display: flex; align-items: center; gap: 12px; }
+.gp-bonus-card img { border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+.gp-bonus-card div { flex: 1; min-width: 0; font-size: 12px; }
+.gp-bonus-card p { margin: 2px 0 0; color: #687182; }
+.gp-bonus-card em { font-style: normal; font-weight: 700; font-size: 12px; }
+.gp-bonus-card em.is-up { color: #10c64a; } .gp-bonus-card em.is-down { color: #ff2b2b; }

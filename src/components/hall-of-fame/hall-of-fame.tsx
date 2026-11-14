@@ -44,7 +44,7 @@ export const hofCopy: Record<HofGroup, Partial<Record<HofCategory, { heading: st
   },
 };
 
-const money = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M€`;
+const money = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
 const avatarOf = (record: { avatar?: string }) => record.avatar ?? "/images/hof/avatar-default.png";
 
 export function hofHref(values: { group?: HofGroup; category?: HofCategory; scope?: HofScope }) {

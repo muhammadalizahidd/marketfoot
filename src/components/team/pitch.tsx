@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+import type { ReactNode, KeyboardEvent, MouseEvent } from "react";
+import { useRouter } from "next/navigation";
 
 import { getJerseyImage } from "@/lib/jersey-map";
 
@@ -8,6 +10,7 @@ export type PitchPlayer = {
   id: string;
   name: string;
   clubName?: string;
+  clubId?: string;
   value: number;
   /** Percentage change since the gamer bought the player. */
   changePct?: number;
@@ -19,7 +22,7 @@ export type PitchPlayer = {
   frozen?: boolean;
 };
 
-const mEuro = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M€`;
+const mEuro = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
 const kEuro = (value: number) => `${value < 0 ? "-" : ""}${Math.abs(Math.round(value / 1000)).toLocaleString("fr-FR")} k€`;
 
 function Arrow({ up }: { up: boolean }) {
@@ -47,10 +50,21 @@ export type PlayerCardProps = {
   state?: { selected?: boolean; eligible?: boolean; ineligible?: boolean };
   disabled?: boolean;
   onSelect?: () => void;
+  /** Opens the quick-reference player panel (click on the name). */
+  onOpenPlayer?: (id: string) => void;
 };
 
-/** Jersey + white info card (Figma 90 x 62 card, 40 x 37 jersey). */
-export function PlayerCard({ player, position, mode, state = {}, disabled, onSelect }: PlayerCardProps) {
+/** Cards show the surname only: "Khvicha Kvaratskhelia" and "K. Kvaratskhelia" both become "Kvaratskhelia". */
+export function surname(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts.length > 1 ? parts.slice(1).join(" ") : name;
+}
+
+const activate = (event: KeyboardEvent, run: () => void) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.stopPropagation(); run(); } };
+
+/** Jersey + white info card (Figma 100 x 76 card, 40 x 37 jersey). */
+export function PlayerCard({ player, position, mode, state = {}, disabled, onSelect, onOpenPlayer }: PlayerCardProps) {
+  const router = useRouter();
   if (!player) {
     return (
       <button type="button" className="tm-slot tm-slot--empty" onClick={onSelect} disabled={disabled} aria-label={`Ajouter un joueur (${position})`}>
@@ -61,14 +75,30 @@ export function PlayerCard({ player, position, mode, state = {}, disabled, onSel
   }
   const cls = ["tm-slot", state.selected && "is-selected", state.eligible && "is-eligible", state.ineligible && "is-ineligible", player.frozen && "is-frozen"].filter(Boolean).join(" ");
   return (
-    <button type="button" className={cls} onClick={onSelect} disabled={disabled} aria-pressed={state.selected} title={player.frozen ? "Équipe figée" : `Voir le profil de ${player.name}`}>
+    <button type="button" className={cls} onClick={onSelect} disabled={disabled} aria-pressed={state.selected} title={player.frozen ? "Équipe figée" : undefined}>
       <span className="tm-jersey">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={getJerseyImage(player.clubName)} alt="" />
+        <span
+          className={player.clubId ? "tm-jersey-link" : undefined}
+          role={player.clubId ? "link" : undefined}
+          tabIndex={player.clubId ? 0 : undefined}
+          title={player.clubId ? `Voir la page de ${player.clubName ?? "l’équipe"}` : undefined}
+          onClick={player.clubId ? (e: MouseEvent) => { e.stopPropagation(); router.push(`/ligue-1/clubs/${player.clubId}`); } : undefined}
+          onKeyDown={player.clubId ? (e) => activate(e, () => router.push(`/ligue-1/clubs/${player.clubId}`)) : undefined}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={getJerseyImage(player.clubName)} alt="" />
+        </span>
         {player.isCaptain && <span className="tm-captain" aria-label="Capitaine">C</span>}
       </span>
       <span className="tm-card">
-        <span className="tm-card-name">{player.name}</span>
+        <span
+          className={onOpenPlayer ? "tm-card-name tm-card-name--link" : "tm-card-name"}
+          role={onOpenPlayer ? "link" : undefined}
+          tabIndex={onOpenPlayer ? 0 : undefined}
+          title={onOpenPlayer ? "Voir la fiche du joueur" : undefined}
+          onClick={onOpenPlayer ? (e: MouseEvent) => { e.stopPropagation(); onOpenPlayer(player.id); } : undefined}
+          onKeyDown={onOpenPlayer ? (e) => activate(e, () => onOpenPlayer(player.id)) : undefined}
+        >{surname(player.name)}</span>
         <span className="tm-card-value">{mEuro(player.value)}</span>
         <Metric player={player} mode={mode} />
       </span>
@@ -88,7 +118,6 @@ export function PitchMarkings() {
       <path d="M94 626V495H410V626" />
       <path d="M180 626V584H323V626" />
       <path d="M205 495a50 50 0 0 1 98 0" />
-      <path d="M22 606a20 20 0 0 0 20 20M479 606a20 20 0 0 1-20 20" />
     </svg>
   );
 }

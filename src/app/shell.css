@@ -16,7 +16,7 @@ html { overflow-x: hidden; }
 
 .ms-shell {
   min-height: calc(100dvh / var(--ui-scale, 1));
-  background: #fff;
+  background: #FCFAFA;
   color: var(--mf-ink);
   font-family: var(--mf-font);
   display: flex;
@@ -132,7 +132,8 @@ html { overflow-x: hidden; }
 .ms-account-top svg { width: 12px; height: 12px; }
 .ms-account-label { margin-top: 6px; font-size: 10px; font-weight: 400; color: rgba(255, 255, 255, 0.78); }
 .ms-account-value { margin-top: 8px; font-size: 16px; font-weight: 700; line-height: 1.2; display: flex; align-items: center; justify-content: space-between; }
-.ms-ball { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3b0, #f0b400 55%, #a56a00); box-shadow: 0 0 6px rgba(255, 200, 0, 0.7); }
+.ms-trophy { width: 36px; height: 36px; margin: -8px 0; flex-shrink: 0; overflow: hidden; }
+.ms-trophy img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35)); }
 .ms-account-budget { margin-top: auto; height: 33.5px; box-sizing: border-box; border-top: 1px solid rgba(255, 255, 255, 0.35); display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: rgba(255, 255, 255, 0.78); }
 .ms-account-budget b { font-size: 12px; color: #fff; line-height: 1; }
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PriceFilter } from "./price-filter";
 import { clubCode } from "@/lib/club-codes";
 import { getJerseyImage } from "@/lib/jersey-map";
 import type { PlayerTableRow, PlayersView as View, SpeculationPeriod } from "@/data/repositories/players-repository";
@@ -29,7 +30,7 @@ type Props = {
   basePath?: string;
 };
 
-const M = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M€`;
+const M = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
 const full = (value: number) => `${Math.round(value).toLocaleString("fr-FR").replace(/[  ]/g, " ")} €`;
 const money = (value: number) => (Math.abs(value) >= 1_000_000 ? M(value) : `${Math.round(value / 1000).toLocaleString("fr-FR")} k€`);
 
@@ -122,23 +123,14 @@ export function PlayersView({ params, rows, total, clubs, seasonName, basePath =
 
       <div className="pl-filters">
         <div className="pl-chips">
-          {([["prix", "Prix"], ["club", "Club"], ["poste", "Poste"]] as const).map(([id, label]) => (
+          {([["prix", "Prix"], ["club", "Club"]] as const).map(([id, label]) => (
             <Link key={id} href={toggleOpen(id)} className={`pl-chip${params.open === id || filtersActive[id] ? " is-active" : ""}`}>{label}{caret}</Link>
           ))}
         </div>
         <span className="pl-season">{seasonName}<svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m3 4.5 3 3 3-3" /></svg></span>
       </div>
 
-      {params.open === "prix" && (
-        <form className="pl-price" action={basePath}>
-          {params.view !== "general" && <input type="hidden" name="view" value={params.view} />}
-          {params.q && <input type="hidden" name="q" value={params.q} />}
-          <label><input type="number" name="min" step="0.01" min="0" defaultValue={params.min !== undefined ? params.min / 1_000_000 : ""} placeholder="Min (M€)" aria-label="Prix minimum en millions d’euros" /></label>
-          <span className="pl-track" aria-hidden="true" />
-          <label><input type="number" name="max" step="0.01" min="0" defaultValue={params.max !== undefined ? params.max / 1_000_000 : ""} placeholder="Max (M€)" aria-label="Prix maximum en millions d’euros" /></label>
-          <button type="submit">Appliquer</button>
-        </form>
-      )}
+      {params.open === "prix" && <PriceFilter min={params.min} max={params.max} />}
       {params.open === "club" && (
         <div className="pl-clubs" role="group" aria-label="Clubs">
           {clubs.map((club) => {
@@ -147,18 +139,13 @@ export function PlayersView({ params, rows, total, clubs, seasonName, basePath =
             return (
               <Link key={club.id} href={href({ clubs: next, page: 1, open: "club" })} className={selected ? "is-active" : undefined} aria-pressed={selected}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/images/players/shirt.png" alt="" width={16} height={18} />{club.name}
+                <img src={getJerseyImage(club.name)} alt="" width={16} height={18} />{club.name}
               </Link>
             );
           })}
         </div>
       )}
-      {params.open === "poste" && (
-        <div className="pl-clubs" role="group" aria-label="Poste">
-          {positions.map(([code, label]) => <Link key={code} href={href({ position: code || undefined, page: 1, open: "poste" })} className={(params.position ?? "") === code ? "is-active" : undefined}>{label}</Link>)}
-        </div>
-      )}
-
+      
       <section className="pl-table" aria-label="Joueurs">
         {params.view === "speculation" ? (
           <nav className="pl-sub" aria-label="Période">

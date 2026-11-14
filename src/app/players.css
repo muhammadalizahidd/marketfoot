@@ -5,7 +5,7 @@
 .pl-tabs { box-sizing: border-box; width: 606px; height: 40px; padding: 4px 8px; display: flex; border: 1px solid #dfe8fa; border-radius: 10px; background: #e9f0fe; }
 .pl-tabs a { flex: 1 1 0; display: grid; place-items: center; height: 30px; border-radius: 6px; font-size: 12px; font-weight: 400; }
 .pl-tabs a:nth-child(1) { flex-grow: 207.33; } .pl-tabs a:nth-child(2), .pl-tabs a:nth-child(3) { flex-grow: 191.33; }
-.pl-tabs a.is-active { background: #fff; color: #0b5fff; font-weight: 700; box-shadow: 0 1px 3px rgba(11, 95, 255, 0.12); }
+.pl-tabs a.is-active { background: #fff; color: #0b5fff; font-weight: 700; }
 .pl-search { box-sizing: border-box; width: 299px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 17px; border: 1px solid #dedede; border-radius: 8px; background: #fff; color: #777; }
 .pl-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 12px; color: #121212; }
 .pl-search input::placeholder { color: #777; }
@@ -22,7 +22,7 @@
 .pl-season svg { color: #0b5fff; margin-right: -3px; }
 
 .pl-price { position: relative; width: 335px; height: 52px; margin-top: 12px; }
-.pl-price label { position: absolute; top: 0; height: 26px; box-sizing: border-box; padding: 0 8px; display: flex; align-items: center; border: 1px solid #e6e6e6; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); }
+.pl-price label { position: absolute; top: 0; height: 26px; box-sizing: border-box; padding: 0 8px; display: flex; align-items: center; border: 1px solid #e6e6e6; border-radius: 8px; background: #fff; }
 .pl-price label:first-of-type { left: 0; } .pl-price label:nth-of-type(2) { left: 268px; }
 .pl-price input[type="number"] { width: 64px; border: 0; outline: 0; background: transparent; font: inherit; font-size: 11px; color: #555; -moz-appearance: textfield; }
 .pl-price input::-webkit-outer-spin-button, .pl-price input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -31,12 +31,12 @@
 .pl-track::before { left: 0; } .pl-track::after { right: 0; }
 .pl-price button { position: absolute; left: 304px; top: 28px; height: 22px; padding: 0 10px; border: 0; border-radius: 6px; background: #0b5fff; color: #fff; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
 .pl-clubs { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 9px 8px; padding-left: 0; }
-.pl-clubs a { box-sizing: border-box; height: 22px; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px 0 5px; border: 1px solid #ececec; border-radius: 12px; background: #fff; font-size: 10px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+.pl-clubs a { box-sizing: border-box; height: 22px; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px 0 5px; border: 1px solid #ececec; border-radius: 12px; background: #fff; font-size: 10px; }
 .pl-clubs a.is-active { border-color: #0b5fff; color: #0b5fff; }
 .pl-clubs img { width: 16px; height: 16px; object-fit: contain; }
 
 .pl-table { margin-top: 16px; }
-.pl-sub { display: inline-flex; height: 32px; background: #f5f5f5; box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08); }
+.pl-sub { display: inline-flex; height: 32px; background: #f5f5f5; }
 .pl-sub a { padding: 0 24px; display: grid; place-items: center; font-size: 12px; color: #777; }
 .pl-sub a.is-active { background: #0b5fff; color: #fff; font-weight: 500; }
 .pl-grid { display: grid; align-items: center; padding-left: 12px; box-sizing: border-box; }
@@ -52,7 +52,7 @@
 .pl-rankchip svg { color: #0b5fff; }
 .pl-icon { height: 14px; width: auto; display: block; }
 .pl-card { display: block; width: 8.5px; height: 13px; border-radius: 1px; margin: 0 4px 0 0; }
-.pl-card--yellow { background: #ffe600; } .pl-card--red { background: #e60000; }
+.pl-card--yellow { background: #ffe600; border: 0.5px solid #000; box-sizing: border-box; } .pl-card--red { background: #e60000; border: 0.5px solid #000; box-sizing: border-box; }
 .pl--general .pl-head .pl-c:last-child { justify-content: flex-end; padding-right: 5px; }
 .pl--general .pl-row .pl-c:last-child { text-align: right; padding-right: 0; }
 

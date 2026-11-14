@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import Link from "next/link";
+
 import type { MatchRow } from "@/data/repositories/player-profile-repository";
 
 const kilo = (value: number) => `${value > 0 ? "+" : value < 0 ? "-" : ""}${Math.abs(Math.round(value / 1000)).toLocaleString("fr-FR")} k€`;
@@ -12,20 +14,18 @@ const chevron = (open: boolean) => (
 const arrowUp = <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#10c64a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9 9 3M4.5 3H9v4.5" /></svg>;
 const arrowDown = <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#ff2b2b" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 3l6 6M9 4.5V9H4.5" /></svg>;
 
-function Icons({ row, side }: { row: MatchRow; side: "bonus" | "malus" }) {
-  const items: { key: string; node: React.ReactNode }[] = [];
+function Icons({ row }: { row: MatchRow }) {
+  const items: React.ReactNode[] = [];
   // eslint-disable-next-line @next/next/no-img-element
-  const img = (name: string, key: string) => ({ key, node: <img key={key} className="pf-ico" src={`/images/players/${name}.png`} alt="" /> });
-  if (side === "bonus") {
-    for (let i = 0; i < Math.min(row.goals, 3); i++) items.push(img("ball", `g${i}`));
-    for (let i = 0; i < Math.min(row.assists, 3); i++) items.push(img("boot", `a${i}`));
-    if (row.cleanSheet) items.push(img("net", "cs"));
-  } else {
-    for (let i = 0; i < Math.min(row.yellow, 3); i++) items.push({ key: `y${i}`, node: <i key={`y${i}`} className="pf-card pf-card--yellow" /> });
-    for (let i = 0; i < Math.min(row.red, 2); i++) items.push({ key: `r${i}`, node: <i key={`r${i}`} className="pf-card pf-card--red" /> });
-    for (let i = 0; i < Math.min(row.ownGoals, 2); i++) items.push(img("redball", `o${i}`));
-  }
-  return <span className="pf-icons">{items.map((item) => item.node)}</span>;
+  const img = (name: string, key: string) => <img key={key} className="pf-ico" src={`/images/players/${name}.png`} alt="" />;
+  // Same order as the match sheets: goal, assist, yellow card, red card, own goal (then clean sheet).
+  for (let i = 0; i < Math.min(row.goals, 3); i++) items.push(img("ball", `g${i}`));
+  for (let i = 0; i < Math.min(row.assists, 3); i++) items.push(img("boot", `a${i}`));
+  for (let i = 0; i < Math.min(row.yellow, 3); i++) items.push(<i key={`y${i}`} className="pf-card pf-card--yellow" />);
+  for (let i = 0; i < Math.min(row.red, 2); i++) items.push(<i key={`r${i}`} className="pf-card pf-card--red" />);
+  for (let i = 0; i < Math.min(row.ownGoals, 2); i++) items.push(img("redball", `o${i}`));
+  if (row.cleanSheet) items.push(img("net", "cs"));
+  return <span className="pf-icons">{items}</span>;
 }
 
 /** "Historique de primes": per-matchday bar chart plus the expandable match-by-match table (Figma "Player Form"). */
@@ -70,20 +70,19 @@ export function PrimeHistory({ rows, chart, matchdays = 34, defaultOpen }: { row
       </div>
 
       <div className="pf-matches">
-        <div className="pf-mhead"><span>J</span><span>Date</span><span className="c-match">Match</span><span>Min.</span><span>Bonus</span><span>Malus</span><span className="c-dot">Dotations</span></div>
+        <div className="pf-mhead"><span>J</span><span>Date</span><span className="c-match">Match</span><span>Min.</span><span>Performances</span><span className="c-dot">Dotations</span></div>
         {rows.length ? rows.map((row) => {
           const expanded = open === row.day;
           return (
             <div key={row.day} className={`pf-mrow${expanded ? " is-open" : ""}`}>
-              <button type="button" className="pf-mline" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : row.day)}>
+              <div className="pf-mline">
                 <b>J{row.day}</b>
                 <span>{date(row.kickoff)}</span>
-                <span className="c-match"><em>{row.home}</em><i className={`pf-score is-${row.result}`}>{row.homeScore}-{row.awayScore}</i><em>{row.away}</em></span>
+                <span className="c-match"><Link className="pf-team" href={`/ligue-1/clubs/${row.homeId}`} title={`Voir la page de ${row.home}`}>{row.home}</Link><Link className={`pf-score is-${row.result}`} href={row.matchHref} title="Voir la feuille de match">{row.homeScore}-{row.awayScore}</Link><Link className="pf-team" href={`/ligue-1/clubs/${row.awayId}`} title={`Voir la page de ${row.away}`}>{row.away}</Link></span>
                 <span className="c-min">{row.played ? <>{row.started ? (row.substitutedOut ? arrowDown : null) : arrowUp}{row.minutes}&apos;</> : "NJ"}</span>
-                <span className="c-ico"><Icons row={row} side="bonus" /></span>
-                <span className="c-ico"><Icons row={row} side="malus" /></span>
-                <span className={`c-dot ${row.total >= 0 ? "is-up" : "is-down"}`}>{kilo(row.total)}{chevron(expanded)}</span>
-              </button>
+                <span className="c-ico"><Icons row={row} /></span>
+                <span className={`c-dot ${row.total >= 0 ? "is-up" : "is-down"}`}>{kilo(row.total)}<button type="button" className="pf-chev" aria-expanded={expanded} aria-label={`Détail de la journée ${row.day}`} onClick={() => setOpen(expanded ? null : row.day)}>{chevron(expanded)}</button></span>
+              </div>
               {expanded && (
                 <ul className="pf-lines">{row.lines.map((line) => <li key={line.key}><span>{line.label}</span><b>{kilo(line.amount)}</b></li>)}</ul>
               )}

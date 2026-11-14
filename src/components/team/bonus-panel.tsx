@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useRef } from "react";
 
+import { HelpTip } from "@/components/team/help-tip";
 import { bonusCatalogue } from "@/lib/bonus-catalogue";
 import { playBonus } from "@/features/squad/bonus-actions";
 
@@ -30,9 +31,7 @@ export function BonusPanel({ state }: { state?: BonusState }) {
       <header className="tm-panel-head">
         <h2>
           Bonus
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-label={`Aide : joue un bonus par journée, +${gain} % sur les primes de tes titulaires s’il se réalise.`}>
-            <circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7" /><circle cx="12" cy="17" r=".6" fill="currentColor" />
-          </svg>
+          <HelpTip size={20} text={`Joue un bonus par journée : +${gain} % sur les primes de tes titulaires s’il se réalise.`} />
         </h2>
         <span className="tm-badge">{gain}%</span>
       </header>

@@ -1,8 +1,8 @@
-/** Short club codes shown next to player names (PSG, ASM, LOSC...). Falls back to the first three letters. */
+/** Standard three-letter Ligue 1 codes shown everywhere a club is named (PSG, MON, LIL...). Falls back to the first three letters. */
 const codes: [string, string][] = [
-  ["paris saint", "PSG"], ["psg", "PSG"], ["monaco", "ASM"], ["lille", "LOSC"], ["losc", "LOSC"], ["lens", "RCL"], ["toulouse", "TFC"],
-  ["marseille", "OM"], ["lyon", "OL"], ["nice", "OGCN"], ["rennes", "SRFC"], ["rennais", "SRFC"], ["strasbourg", "RCSA"], ["brest", "SB29"],
-  ["nantes", "FCN"], ["auxerre", "AJA"], ["angers", "SCO"], ["havre", "HAC"], ["lorient", "FCL"], ["paris fc", "PFC"], ["troyes", "ESTAC"], ["mans", "MANS"],
+  ["paris fc", "PFC"], ["paris saint", "PSG"], ["psg", "PSG"], ["monaco", "MON"], ["lille", "LIL"], ["losc", "LIL"], ["lens", "LEN"], ["toulouse", "TOU"],
+  ["marseille", "MAR"], ["lyon", "LYO"], ["nice", "NIC"], ["rennes", "REN"], ["rennais", "REN"], ["strasbourg", "STR"], ["brest", "BRE"],
+  ["nantes", "NAN"], ["auxerre", "AUX"], ["angers", "ANG"], ["havre", "HAC"], ["lorient", "LOR"], ["paris fc", "PFC"], ["troyes", "TRO"], ["mans", "LEM"],
 ];
 
 export function clubCode(clubName?: string): string {

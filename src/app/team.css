@@ -26,7 +26,7 @@
 .tm-alert--info { background: var(--tm-tab-bg); color: #1d3a8a; }
 
 /* Valeur / Spéculation / Possesseur */
-.tm-switch { display: flex; width: max-content; margin-top: 24px; height: 32px; border-radius: 8px 8px 0 0; overflow: hidden; box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05); }
+.tm-switch { display: flex; width: max-content; margin-top: 24px; height: 32px; border-radius: 8px 8px 0 0; overflow: hidden; }
 .tm-switch button { border: 0; padding: 0 24px; background: #f7f5f5; color: #8a8a8a; font: inherit; font-size: 12px; cursor: pointer; }
 .tm-switch button.is-active { background: var(--tm-blue); color: #fff; font-weight: 700; }
 
@@ -37,24 +37,24 @@
 .tm-bench { width: 252px; border-radius: 0 24px 24px 0; }
 .tm-markings { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .tm-pitch-rows { position: relative; padding-top: 23px; }
-.tm-bench .tm-pitch-rows { padding-top: 26px; }
-.tm-row { height: 168px; display: flex; justify-content: center; align-items: flex-start; gap: 32px; }
+.tm-bench .tm-pitch-rows { padding-top: 22px; }
+.tm-row { height: 164px; display: flex; justify-content: center; align-items: flex-start; gap: 16px; }
 .tm-row--bench { gap: 24px; }
 
 /* Player slot: 40x37 jersey, 6px gap, 90x62 card */
-.tm-slot { width: 90px; border: 0; padding: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #111; font-family: inherit; cursor: pointer; }
+.tm-slot { width: 100px; border: 0; padding: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #111; font-family: inherit; cursor: pointer; }
 .tm-slot:disabled { cursor: not-allowed; }
 .tm-jersey { position: relative; width: 40px; height: 37px; display: block; }
 .tm-jersey img { width: 56px; height: 52px; margin: -7.5px -8px; object-fit: contain; display: block; }
 .tm-captain { position: absolute; left: calc(50% + 15.5px); top: calc(50% - 1.5px); width: 18px; height: 18px; border-radius: 50%; background: #fff; color: var(--tm-pitch); font-size: 12px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
-.tm-card { width: 90px; height: 62px; box-sizing: border-box; padding-top: 3px; border-radius: 6px; background: #fff; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.28); display: flex; flex-direction: column; align-items: center; }
-.tm-card-name { max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 16px; }
-.tm-card-value { font-size: 12px; line-height: 16px; font-weight: 700; margin-top: 1px; }
-.tm-pill { margin-top: 5.5px; height: 17px; min-width: 24px; box-sizing: border-box; padding: 0 6px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; color: #fff; background: #9aa3b2; }
+.tm-card { width: 100px; height: 76px; box-sizing: border-box; padding: 7px 0 7px; gap: 7px; justify-content: flex-start; border-radius: 6px; background: #fff; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.28); display: flex; flex-direction: column; align-items: center; }
+.tm-card-name { max-width: 94px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 16px; }
+.tm-card-value { font-size: 12px; line-height: 16px; font-weight: 700; }
+.tm-pill { margin-top: 0; height: 17px; min-width: 24px; box-sizing: border-box; padding: 0 6px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; color: #fff; background: #9aa3b2; }
 .tm-pill.is-up { background: var(--tm-up); }
 .tm-pill.is-down { background: var(--tm-down); }
 .tm-pill--owners { background: #e8e8e8; color: #111; }
-.tm-slot.is-selected .tm-card { outline: 3px solid #ffd21e; }
+.tm-slot.is-selected .tm-card { outline: 3px solid var(--tm-blue); }
 .tm-slot.is-eligible .tm-card { outline: 3px solid #fff; }
 .tm-slot.is-ineligible, .tm-slot.is-frozen { opacity: 0.55; }
 .tm-slot--empty { height: 105px; justify-content: center; border: 2px dashed rgba(255, 255, 255, 0.7); border-radius: 8px; color: #fff; }
@@ -115,3 +115,51 @@
 .prediction-drawer { display: flex; flex-direction: column; height: 780px; }
 .prediction-drawer .prediction-drawer-list { flex: 1; min-height: 0; overflow-y: auto; border-radius: 12px 12px 0 0; }
 @media (max-width: 1100px) { .prediction-drawer { height: auto; } }
+
+/* Hover affordances: name -> player panel, jersey -> team page */
+.tm-card-name--link { cursor: pointer; }
+.tm-card-name--link:hover, .tm-card-name--link:focus-visible { color: var(--tm-blue); text-decoration: underline; outline: none; }
+.tm-jersey-link { display: block; cursor: pointer; transition: transform 0.12s ease; }
+.tm-jersey-link:hover, .tm-jersey-link:focus-visible { transform: scale(1.12); outline: none; }
+
+/* Help tooltips */
+.tm-help { position: relative; display: inline-flex; align-items: center; cursor: help; outline: none; }
+.tm-help-pop { position: absolute; z-index: 20; top: calc(100% + 8px); left: -12px; width: 240px; padding: 10px 12px; border-radius: 8px; background: #121212; color: #fff; font-size: 12px; font-weight: 400; line-height: 1.4; text-align: left; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 0.12s ease, transform 0.12s ease; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); }
+.tm-help:hover .tm-help-pop, .tm-help:focus-visible .tm-help-pop { opacity: 1; visibility: visible; transform: none; }
+
+/* Captain eye is now a button */
+.tm-cap-eye { border: 0; background: transparent; padding: 0; cursor: pointer; }
+
+/* Speculation period filter */
+.tm-spec { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 12px; color: #4a5568; }
+.tm-spec select, .tm-spec input { height: 30px; box-sizing: border-box; border: 1px solid #e0e0e0; border-radius: 8px; padding: 0 8px; background: #fff; font: inherit; font-size: 12px; color: #121212; }
+
+/* Quick-reference player panel (opens to the left of the right-hand panel) */
+.tm-workspace--with-player .tm-aside { display: flex; gap: 16px; width: auto; }
+.tm-player-panel { width: 280px; flex-shrink: 0; box-sizing: border-box; border-radius: 24px; overflow: hidden; background: var(--tm-tab-bg); box-shadow: 0 2px 10px rgba(8, 94, 255, 0.12); animation: tm-slide-in 0.18s ease-out; }
+.tm-player-panel header { height: 55px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; background: var(--tm-blue); color: #fff; }
+.tm-player-panel h2 { margin: 0; font-size: 16px; }
+.tm-player-panel header button { border: 0; background: transparent; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; }
+.tm-player-body { margin-top: 24px; padding: 16px; background: #fff; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.tm-player-body img { width: 96px; height: 90px; object-fit: contain; }
+.tm-player-body dl { width: 100%; margin: 8px 0 0; display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; font-size: 13px; }
+.tm-player-body dt { color: #687182; }
+.tm-player-body dd { margin: 0; font-weight: 700; text-align: right; }
+.tm-player-body a { margin-top: 8px; color: var(--tm-blue); font-size: 13px; font-weight: 700; }
+@keyframes tm-slide-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+@media (max-width: 1100px) { .tm-workspace--with-player .tm-aside { flex-direction: column; width: 100%; } .tm-player-panel { width: 100%; } }
+
+/* Transfer panel typography (review round) */
+.tm-panel .transfer-slot-name, .tm-panel .transfer-slot-price { font-weight: 400; }
+.tm-panel .catalogue-player-name { font-weight: 400; }
+.tm-panel .catalogue-player-price { font-weight: 700; }
+.tm-panel .cost-row:not(.cost-total-row) .cost-label, .tm-panel .cost-row:not(.cost-total-row) .cost-val { font-weight: 400; }
+.tm-panel .filter-pill-btn { font-weight: 400; font-size: clamp(0.7rem, 0.76vw, 0.8rem); color: #94A3B8; }
+.tm-panel .filter-pill-btn .chev { display: inline-flex; color: #64748B; }
+.tm-panel .filter-pill-btn.is-set { color: #0F172A; }
+
+/* Prediction results: black = not played yet, green = correct, red = wrong */
+.prediction-drawer .prediction-choice button[data-result="correct"] { border-color: var(--tm-up); background: var(--tm-up); color: #fff; opacity: 1; }
+.prediction-drawer .prediction-choice button[data-result="wrong"] { border-color: var(--tm-down); background: var(--tm-down); color: #fff; opacity: 1; }
+.prediction-drawer .prediction-choice button:disabled { color: #121212; opacity: 1; }
+.prediction-drawer .prediction-choice button[aria-pressed=true]:disabled:not([data-result]) { background: #121212; border-color: #121212; color: #fff; }

@@ -4,8 +4,8 @@ import { getJerseyTrimImage } from "@/lib/jersey-map";
 import type { ActivityEvent, PlayerProfile } from "@/data/repositories/player-profile-repository";
 import { PrimeHistory } from "./prime-history";
 
-const M = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M€`;
-const M1 = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })} M€`;
+const M = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
+const M1 = (value: number) => `${(value / 1_000_000).toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} M€`;
 const amount = (value: number) => (Math.abs(value) >= 1_000_000 ? M1(Math.abs(value)) : `${Math.round(Math.abs(value) / 1000).toLocaleString("fr-FR")} k€`);
 /** "+ 4,27 M€" as drawn in the summary cards. */
 const spaced = (value: number, decimals = 2) => `${value > 0 ? "+ " : value < 0 ? "- " : ""}${Math.abs(value) >= 1_000_000 ? (decimals === 2 ? M(Math.abs(value)) : M1(Math.abs(value))) : amount(value)}`;
