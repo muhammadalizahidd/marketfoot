@@ -1,18 +1,123 @@
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
+
+import { FriendsToggle, NavSelect } from "@/components/ranking/ranking-controls";
+import { RankingTable } from "@/components/ranking/ranking-table";
 import { getLeagueData } from "@/data/repositories/league-repository";
-import { CompetitionFilters } from "@/components/competition/competition-filters";
-const euro=new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0});
-export default async function RankingsPage({searchParams}:{searchParams:Promise<{tab?:string;period?:string;season?:string;day?:string;q?:string;page?:string}>}){
- const q=await searchParams; const data=await getLeagueData(q.season,q.day);
- const tab=["general","gains","predictions","squad","speculation","bench"].includes(q.tab??"")?q.tab!:"general";
- const period=["all","first","second","day"].includes(q.period??"")?q.period!:"all";
- const page=Math.max(1,Math.floor(Number(q.page)||1));
- const href=(changes:Record<string,string>)=>`/classements?${new URLSearchParams({season:data.season?.id??"",day:data.day?.id??"",tab,period,q:q.q??"",page:String(page),...changes})}`;
- const db=await createSupabaseServerClient();
- const {data:rows,error}=data.season?(tab==="predictions"?await db.rpc("read_prediction_rankings",{p_season:data.season.id,p_period:period,p_day:data.day?.number??34,p_search:q.q??"",p_page:page}):await db.rpc("read_rankings",{p_season:data.season.id,p_metric:tab,p_period:period,p_day:data.day?.number??34,p_search:q.q??"",p_page:page})):{data:[],error:null};
- type Row={gamer_id:string;username:string;rank:number;total_wealth:number;squad_value:number;budget:number;locked_account:number;earnings:number;latest_earnings:number;speculation:number;transfer_count:number;bench_value:number;bench_earnings:number;total_predictions:number;latest_predictions:number;total_count:number};
- const rankings=(rows??[]) as Row[];const total=Number(rankings[0]?.total_count??0);
- const {data:{user}}=await db.auth.getUser();
- return <main className="app-page ranking-page"><div className="top-controls"><nav className="section-tabs" aria-label="Classements">{[["general","Général"],["gains","Gains"],["predictions","Pronostics"],["squad","Effectif"],["speculation","Spéculation"],["bench","Banc de touche"]].map(([value,label])=><Link key={value} href={href({tab:value,page:"1"})} className={tab===value?"is-active":""}>{label}</Link>)}</nav><form noValidate className="search-box" action="/classements"><input type="hidden" name="tab" value={tab}/><input type="hidden" name="season" value={data.season?.id??""}/><input type="hidden" name="period" value={period}/><input type="hidden" name="day" value={data.day?.id??""}/><input name="q" defaultValue={q.q} placeholder="Rechercher un pseudo" aria-label="Rechercher un pseudo"/><button>Rechercher</button>{q.q&&<Link href={href({q:"",page:"1"})} aria-label="Effacer la recherche">×</Link>}</form></div><div className="ranking-filter-bar"><CompetitionFilters action="/classements" seasons={data.seasons} days={data.days} seasonId={data.season?.id} dayId={data.day?.id} preserve={{tab,period,q:q.q??""}}/></div><nav className="position-tabs" aria-label="Période">{[["all","Général"],["first","Phase aller"],["second","Phase retour"],["day","Journée"]].map(([value,label])=><Link key={value} href={href({period:value,page:"1"})} className={period===value?"is-active":""}>{label}</Link>)}</nav>{error?<section className="empty-state" role="alert"><h1>Classement indisponible</h1><p>Réessayez dans quelques instants.</p></section>:rankings.length?<><div className="table-wrap"><table><thead><tr><th>Rang</th><th>Nom</th>{tab==="gains"?<><th>Gains cumulés</th><th>Derniers gains</th></>:tab==="speculation"?<><th>Ventes − achats</th><th>Transferts</th></>:tab==="bench"?<><th>Valeur du banc figé</th><th>Gains du banc</th></>:<><th>Valeur effectif</th><th>Budget</th><th>Compte bloqué</th><th>Patrimoine</th></>}</tr></thead><tbody>{rankings.map(row=><tr key={row.gamer_id} className={row.gamer_id===user?.id?"is-selected-row":""}><td>{row.rank}</td><td>{row.username}{row.gamer_id===user?.id?" (vous)":""}</td>{tab==="gains"?<><td>{euro.format(row.earnings)}</td><td>{euro.format(row.latest_earnings)}</td></>:tab==="predictions"?<><td>{euro.format(row.total_predictions)}</td><td>{euro.format(row.latest_predictions)}</td></>:tab==="speculation"?<><td>{euro.format(row.speculation)}</td><td>{row.transfer_count}</td></>:tab==="bench"?<><td>{euro.format(row.bench_value)}</td><td>{euro.format(row.bench_earnings)}</td></>:<><td>{euro.format(row.squad_value)}</td><td>{euro.format(row.budget)}</td><td>{euro.format(row.locked_account)}</td><td>{euro.format(row.total_wealth)}</td></>}</tr>)}</tbody></table></div><footer className="table-footer"><span>{total} résultats · règlements validés</span><span>{page>1&&<Link href={href({page:String(page-1)})}>Précédent</Link>}{page*20<total&&<Link href={href({page:String(page+1)})}>Suivant</Link>}</span></footer></>:<section className="empty-state"><h1>Aucun classement</h1><p>Aucun résultat validé ne correspond à cette période ou à votre recherche.</p><Link href={href({page:"1",q:"",period:"all"})}>Réinitialiser les filtres</Link></section>}<p className="table-footer">Gains : primes des titulaires, capitaine inclus. Les classements Pronostics et Palmarès seront disponibles après leur règlement.</p></main>;
+import { getRankingTable, rankingMetrics, rankingPeriods, type RankingMetric, type RankingPeriod } from "@/data/repositories/ranking-table-repository";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = { title: "Classements" };
+
+type Query = { tab?: string; period?: string; season?: string; day?: string; q?: string; page?: string; size?: string; sort?: string; dir?: string; friends?: string };
+
+const tabs: [RankingMetric, string][] = [["general", "Général"], ["primes", "Primes"], ["predictions", "Pronostics"], ["speculation", "Spéculation"], ["honours", "Palmarès"], ["bench", "Banc de touche"]];
+const periods: [RankingPeriod, string][] = [["all", "Général"], ["first", "Phase aller"], ["second", "Phase retour"], ["day", "Journée"]];
+const pageSizes = [10, 20, 50];
+
+const searchIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
+
+export default async function RankingsPage({ searchParams }: { searchParams: Promise<Query> }) {
+  const q = await searchParams;
+  const metric = rankingMetrics.find((item) => item === q.tab) ?? "general";
+  const period: RankingPeriod = metric === "honours" ? "all" : rankingPeriods.find((item) => item === q.period) ?? "all";
+  const pageSize = pageSizes.includes(Number(q.size)) ? Number(q.size) : 10;
+  const page = Math.max(1, Math.floor(Number(q.page)) || 1);
+  const dir = q.dir === "desc" ? "desc" : "asc";
+  const sort = q.sort ?? "rank";
+  const friendsOnly = q.friends === "1";
+  const text = (q.q ?? "").slice(0, 80);
+
+  const league = await getLeagueData(q.season).catch(() => null);
+  const season = league?.season;
+  const dayNumbers = (league?.days ?? []).map((day) => day.number);
+  const lastDay = league?.day?.number ?? dayNumbers.at(-1) ?? 34;
+  const dayNumber = dayNumbers.includes(Number(q.day)) ? Number(q.day) : lastDay;
+
+  const db = await createSupabaseServerClient();
+  const { data: { user } } = await db.auth.getUser();
+  const result = season && user
+    ? await getRankingTable({ seasonId: season.id, metric, period, day: dayNumber, search: text, page, pageSize, sort, dir, friendsOnly })
+    : { rows: [], total: 0, error: false };
+
+  /** Current URL with some parameters replaced (null removes one). */
+  const href = (changes: Record<string, string | null>) => {
+    const current: Record<string, string> = {
+      tab: metric, ...(period !== "all" ? { period } : {}), ...(season ? { season: season.id } : {}), ...(period === "day" ? { day: String(dayNumber) } : {}),
+      ...(text ? { q: text } : {}), ...(pageSize !== 10 ? { size: String(pageSize) } : {}), ...(sort !== "rank" || dir !== "asc" ? { sort, dir } : {}), ...(friendsOnly ? { friends: "1" } : {}),
+    };
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries({ ...current, ...changes })) if (value) params.set(key, value);
+    return `/classements?${params}`;
+  };
+  const pages = Math.max(1, Math.ceil(result.total / pageSize));
+  const from = result.total ? (page - 1) * pageSize + 1 : 0;
+  const to = Math.min(page * pageSize, result.total);
+  const dayIndex = dayNumbers.indexOf(dayNumber);
+  const stepPeriod = period === "all" ? "day" : period;
+
+  return (
+    <main className="rk-page">
+      <div className="rk-top">
+        <nav className="rk-tabs" aria-label="Classements">
+          {tabs.map(([id, label]) => <Link key={id} href={href({ tab: id, page: null, sort: null, dir: null })} className={metric === id ? "is-active" : undefined} aria-current={metric === id ? "page" : undefined}>{label}</Link>)}
+        </nav>
+        <form className="rk-search" action="/classements" role="search">
+          {searchIcon}
+          <input name="q" defaultValue={text} placeholder="Rechercher un pseudo" aria-label="Rechercher un pseudo" />
+          <input type="hidden" name="tab" value={metric} />
+          {period !== "all" && <input type="hidden" name="period" value={period} />}
+          {season && <input type="hidden" name="season" value={season.id} />}
+          {period === "day" && <input type="hidden" name="day" value={dayNumber} />}
+          {friendsOnly && <input type="hidden" name="friends" value="1" />}
+        </form>
+      </div>
+
+      <div className="rk-filters">
+        <FriendsToggle checked={friendsOnly} />
+        <div className="rk-selectors">
+          {league && league.seasons.length > 0 && <NavSelect param="season" className="rk-season" label="Championnat" value={season?.id ?? ""} options={league.seasons.map((item) => ({ value: item.id, label: `Championnat ${item.name}` }))} />}
+          {metric !== "honours" && dayIndex >= 0 && (
+            <span className="rk-stepper" role="group" aria-label="Journée">
+              {dayIndex > 0 ? <Link href={href({ day: String(dayNumbers[dayIndex - 1]), page: null, period: stepPeriod })} aria-label="Journée précédente">‹</Link> : <span aria-hidden="true">‹</span>}
+              <b>J{dayNumber}</b>
+              {dayIndex < dayNumbers.length - 1 ? <Link href={href({ day: String(dayNumbers[dayIndex + 1]), page: null, period: stepPeriod })} aria-label="Journée suivante">›</Link> : <span aria-hidden="true">›</span>}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {metric !== "honours" && (
+        <nav className="rk-periods" aria-label="Période">
+          {periods.map(([id, label]) => <Link key={id} href={href({ period: id === "all" ? null : id, day: id === "day" ? String(dayNumber) : null, page: null })} className={period === id ? "is-active" : undefined}>{label}{id === "day" && period === "day" ? <em>J{dayNumber}</em> : null}</Link>)}
+        </nav>
+      )}
+
+      {result.error ? (
+        <section className="rk-empty" role="alert"><h1>Classement indisponible</h1><p>Réessayez dans quelques instants.</p></section>
+      ) : result.rows.length ? (
+        <>
+          <RankingTable metric={metric} rows={result.rows} meId={user?.id ?? ""} sort={sort} dir={dir} sortHref={(key, next) => href({ sort: key, dir: next, page: null })} />
+          <footer className="rk-foot">
+            <div className="rk-size">
+              <NavSelect param="size" className="rk-pick" label="Résultats par page" value={String(pageSize)} options={pageSizes.map((size) => ({ value: String(size), label: String(size) }))} />
+              <b>résultats par page</b><span>{from}-{to} de {result.total} résultats</span>
+            </div>
+            <div className="rk-pager">
+              <NavSelect param="page" className="rk-pick" label="Page" value={String(Math.min(page, pages))} options={Array.from({ length: pages }, (_, index) => ({ value: String(index + 1), label: String(index + 1) }))} />
+              <span>sur {pages} page{pages > 1 ? "s" : ""}</span>
+              {page > 1 ? <Link href={href({ page: String(page - 1) })} aria-label="Page précédente">‹</Link> : <span aria-hidden="true">‹</span>}
+              {page < pages ? <Link href={href({ page: String(page + 1) })} aria-label="Page suivante">›</Link> : <span aria-hidden="true">›</span>}
+            </div>
+          </footer>
+        </>
+      ) : (
+        <section className="rk-empty">
+          <h1>Aucun classement</h1>
+          <p>{friendsOnly ? "Aucun de vos amis ne figure dans ce classement." : "Aucun résultat validé ne correspond à cette période ou à votre recherche."}</p>
+          <Link href={href({ q: null, friends: null, period: null, day: null, page: null, sort: null, dir: null })}>Réinitialiser les filtres</Link>
+        </section>
+      )}
+    </main>
+  );
 }

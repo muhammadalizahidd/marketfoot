@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { AppHeader } from "@/components/layout/app-header";
 
-export type HofRecord = { rank: number; name: string; period: string; amount: number; /** Overrides the formatted amount (e.g. "18 achats"). */ label?: string; avatar?: string; isMe?: boolean };
+export type HofRecord = { rank: number; name: string; period: string; amount: number; /** Overrides the formatted amount (e.g. "18 achats"). */ label?: string; avatar?: string; gamerId?: string; /** "jersey" when the picture is a club shirt rather than a profile photo. */ kind?: "jersey"; isMe?: boolean };
 export type HofGroup = "managers" | "joueurs";
 export type HofCategory = "perfs" | "banc" | "mercato" | "achats" | "ventes";
 export type HofScope = "day" | "season";
@@ -74,14 +74,16 @@ function Podium({ records }: { records: HofRecord[] }) {
   ];
   return (
     <div className="hof-podium">
-      {medal.map(({ cls, record, place }) => record && (
+      {medal.map(({ cls, record, place }) => !record ? (
+        <div key={cls} className={`hof-medal hof-medal--${cls} hof-medal--empty`} aria-hidden="true"><div className="hof-medal-top"><span className="hof-place">{place}<sup>{place === 1 ? "er" : "e"}</sup></span></div></div>
+      ) : (
         <article key={cls} className={`hof-medal hof-medal--${cls}`}>
           <div className="hof-medal-top"><span className="hof-place">{place}<sup>{place === 1 ? "er" : "e"}</sup></span></div>
           <div className="hof-medal-body" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="hof-medal-avatar" src={record.avatar ?? `/images/hof/avatar-${place}.png`} alt="" width={124} height={124} />
+          <img className={`hof-medal-avatar${record.kind ? " is-jersey" : ""}`} src={avatarOf(record)} alt="" width={124} height={124} />
           <div className="hof-medal-who">
-            <strong>{record.name}</strong>
+            <strong title={record.name}>{record.gamerId ? <Link href={`/profil/${record.gamerId}`}>{record.name}</Link> : record.name}</strong>
             <span>{record.period}</span>
           </div>
           <b className="hof-amount">{record.label ?? money(record.amount)}</b>
@@ -96,8 +98,8 @@ function Row({ record, me }: { record: HofRecord; me?: boolean }) {
     <li className={me ? "is-me" : undefined}>
       <span className="rk">{record.rank}</span>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={avatarOf(record)} alt="" width={32} height={32} />
-      <span className="who"><b>{record.name}</b><small>{record.period}</small></span>
+      <img className={record.kind ? "is-jersey" : undefined} src={avatarOf(record)} alt="" width={32} height={32} />
+      <span className="who"><b title={record.name}>{record.gamerId ? <Link href={`/profil/${record.gamerId}`}>{record.name}</Link> : record.name}</b><small>{record.period}</small></span>
       <span className="vl">{record.label ?? money(record.amount)}</span>
     </li>
   );
@@ -137,24 +139,28 @@ export function HallOfFame({ group, category, scope, records, heading, text, emp
           <Group id="joueurs" label="Joueurs" icon="jersey" items={players} {...nav} />
         </div>
 
-        <div className="hof-intro">
-          <h1>{heading ?? copy.heading}</h1>
-          <p>{text ?? copy.text}</p>
-          <div className="hof-toggle" role="group" aria-label="Période">
-            <Link href={hofHref({ group, category, scope: "day" })} className={scope === "day" ? "is-active" : undefined}>Par journée</Link>
-            <Link href={hofHref({ group, category, scope: "season" })} className={scope === "season" ? "is-active" : undefined}>Par saison</Link>
+        <div className="hof-main">
+          <div className="hof-stage">
+            <div className="hof-intro">
+              <h1>{heading ?? copy.heading}</h1>
+              <p>{text ?? copy.text}</p>
+              <div className="hof-toggle" role="group" aria-label="Période">
+                <Link href={hofHref({ group, category, scope: "day" })} className={scope === "day" ? "is-active" : undefined}>Par journée</Link>
+                <Link href={hofHref({ group, category, scope: "season" })} className={scope === "season" ? "is-active" : undefined}>Par saison</Link>
+              </div>
+            </div>
+
+            {podium.length ? <Podium records={podium} /> : <p className="hof-empty">{emptyText ?? "Aucun record enregistré pour le moment."}</p>}
           </div>
+
+          <aside className="hof-ranking" aria-label="Classement">
+            <header><h2>Classement</h2><span>4e-10e</span></header>
+            <ol>
+              {list.map((record) => <Row key={`${record.rank}-${record.name}`} record={record} me={record.isMe} />)}
+            </ol>
+            {me && <ol className="hof-me"><Row record={me} me /></ol>}
+          </aside>
         </div>
-
-        {podium.length ? <Podium records={podium} /> : <p className="hof-empty">{emptyText ?? "Aucun record enregistré pour le moment."}</p>}
-
-        <aside className="hof-ranking" aria-label="Classement">
-          <header><h2>Classement</h2><span>4e-10e</span></header>
-          <ol>
-            {list.map((record) => <Row key={`${record.rank}-${record.name}`} record={record} me={record.isMe} />)}
-            {me && <Row record={me} me />}
-          </ol>
-        </aside>
       </div>
     </div>
   );

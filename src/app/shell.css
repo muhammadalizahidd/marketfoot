@@ -162,11 +162,20 @@ html { overflow-x: hidden; }
 .ms-footer a { color: #fff; text-decoration: none; margin-left: 20px; }
 .ms-footer a:hover { text-decoration: underline; }
 
+/* narrow laptops / tablets: let the top menu items shrink instead of clipping the Hall of Fame button */
+@media (max-width: 1099px) {
+  .ms-logo { width: auto; margin-right: 24px; flex-shrink: 0; }
+  .ms-nav { flex: 1 1 auto; min-width: 0; }
+  .ms-nav a { width: auto; flex: 1 1 0; min-width: 0; }
+  .ms-nav a .pill { padding: 0 12px; }
+}
+
 @media (max-width: 900px) {
   .ms-top { padding: 0 12px; }
   .ms-header { margin: 12px 0 0; height: auto; min-height: 64px; flex-wrap: wrap; padding: 10px 0; }
   .ms-logo { width: auto; font-size: 24px; margin-left: 16px; }
-  .ms-nav { order: 3; width: 100%; overflow-x: auto; padding: 8px 12px; }
+  .ms-nav { order: 3; width: 100%; flex: 0 0 100%; overflow-x: auto; padding: 8px 12px; }
+  .ms-nav a { flex: 0 0 auto; }
   .ms-fame { margin-right: 12px; }
   .ms-body { flex-direction: column; padding: 0 12px 16px; }
   .ms-sidebar { width: 100%; margin-top: 0; }

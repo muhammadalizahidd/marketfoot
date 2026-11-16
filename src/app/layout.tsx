@@ -10,6 +10,7 @@ import "./team.css";
 import "./hall-of-fame.css";
 import "./club.css";
 import "./players.css";
+import "./ranking.css";
 import "./player-profile.css";
 import "./profile.css";
 import "./profile-extra.css";

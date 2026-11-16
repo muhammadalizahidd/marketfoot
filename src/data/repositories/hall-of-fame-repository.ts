@@ -1,9 +1,15 @@
 import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getJerseyImage } from "@/lib/jersey-map";
 import { one } from "@/lib/supabase/relation";
 import type { HofCategory, HofGroup, HofRecord, HofScope } from "@/components/hall-of-fame/hall-of-fame";
 
-type Entry = { key: string; name: string; period: string; amount: number; gamerId?: string };
+type ClubRel = { name: string } | { name: string }[] | null;
+type PlayerRel = { first_name: string | null; last_name: string; clubs?: ClubRel };
+/** Players have no photo: their club shirt stands in for the avatar. */
+const jerseyOf = (player?: { clubs?: ClubRel } | null): string | undefined => { const club = one(player?.clubs ?? null)?.name; return club ? getJerseyImage(club) : undefined; };
+
+type Entry = { key: string; name: string; period: string; amount: number; gamerId?: string; avatar?: string | null; jersey?: string };
 
 /** "J22 - 24/25": matchday number and the short form of the season name ("2024/2025" -> "24/25"). */
 function periodLabel(number: number | null, season: string): string {
@@ -12,14 +18,16 @@ function periodLabel(number: number | null, season: string): string {
   return number === null ? short : `J${number} - ${short}`;
 }
 
-async function managerGains(scope: HofScope): Promise<Entry[]> {
+/** Manager earnings per matchday/season from starters (PRD 16A "Primes") or from substitutes ("Bench"), as in the ranking. */
+async function managerGains(scope: HofScope, starters: boolean): Promise<Entry[]> {
   const db = createSupabaseAdminClient();
   const { data } = await db
-    .from("settlement_gamer_effects")
-    .select("gamer_id,gross_effect,profiles(username),matchday_settlements!inner(status,matchdays(number,seasons(name)))")
+    .from("settlement_player_effects")
+    .select("gamer_id,gamer_effect,profiles(username,avatar_url),snapshot:snapshot_id!inner(is_starter),matchday_settlements:settlement_id!inner(status,matchdays(number,seasons(name)))")
     .is("reversed_at", null)
+    .eq("snapshot.is_starter", starters)
     .eq("matchday_settlements.status", "completed")
-    .limit(20000);
+    .limit(100000);
   const totals = new Map<string, Entry>();
   for (const row of data ?? []) {
     const settlement = one(row.matchday_settlements);
@@ -27,8 +35,8 @@ async function managerGains(scope: HofScope): Promise<Entry[]> {
     const season = one(day?.seasons)?.name ?? "";
     const number = scope === "day" ? day?.number ?? 0 : null;
     const key = `${row.gamer_id}:${season}:${number}`;
-    const entry = totals.get(key) ?? { key, gamerId: row.gamer_id, name: one(row.profiles)?.username ?? "Joueur", period: periodLabel(number, season), amount: 0 };
-    entry.amount += Number(row.gross_effect);
+    const entry = totals.get(key) ?? { key, gamerId: row.gamer_id, name: one(row.profiles)?.username ?? "Joueur", avatar: one(row.profiles)?.avatar_url ?? null, period: periodLabel(number, season), amount: 0 };
+    entry.amount += Number(row.gamer_effect);
     totals.set(key, entry);
   }
   return [...totals.values()];
@@ -38,7 +46,7 @@ async function playerGains(scope: HofScope): Promise<Entry[]> {
   const db = createSupabaseAdminClient();
   const { data } = await db
     .from("settlement_player_effects")
-    .select("player_id,normal_effect,players(first_name,last_name),matchday_settlements:settlement_id!inner(status,matchdays(number,seasons(name)))")
+    .select("player_id,normal_effect,players(first_name,last_name,clubs(name)),matchday_settlements:settlement_id!inner(status,matchdays(number,seasons(name)))")
     .is("reversed_at", null)
     .eq("matchday_settlements.status", "completed")
     .limit(50000);
@@ -50,7 +58,7 @@ async function playerGains(scope: HofScope): Promise<Entry[]> {
     const number = scope === "day" ? day?.number ?? 0 : null;
     const key = `${row.player_id}:${season}:${number}`;
     const player = one(row.players);
-    const entry = totals.get(key) ?? { key, name: `${player?.first_name?.[0] ?? ""}. ${player?.last_name ?? ""}`.trim(), period: periodLabel(number, season), amount: 0 };
+    const entry = totals.get(key) ?? { key, name: `${player?.first_name?.[0] ?? ""}. ${player?.last_name ?? ""}`.trim(), jersey: jerseyOf(player), period: periodLabel(number, season), amount: 0 };
     entry.amount += Number(row.normal_effect);
     totals.set(key, entry);
   }
@@ -63,7 +71,7 @@ type Settlement = { status?: string; matchdays?: { number: number; seasons?: { n
 async function mercatoVolumes(kind: "bought" | "sold", scope: HofScope): Promise<Entry[]> {
   const db = createSupabaseAdminClient();
   const column = kind === "bought" ? "bought_player_id" : "sold_player_id";
-  const { data } = await db.from("mercado_orders").select(`${column},players:${column}(first_name,last_name),matchdays(number,seasons(name))`).eq("status", "executed").limit(50000);
+  const { data } = await db.from("mercado_orders").select(`${column},players:${column}(first_name,last_name,clubs(name)),matchdays(number,seasons(name))`).eq("status", "executed").limit(50000);
   const totals = new Map<string, Entry>();
   for (const row of (data ?? []) as unknown as Record<string, unknown>[]) {
     const day = one(row.matchdays as Settlement["matchdays"]);
@@ -71,8 +79,8 @@ async function mercatoVolumes(kind: "bought" | "sold", scope: HofScope): Promise
     const number = scope === "day" ? day?.number ?? 0 : null;
     const playerId = String(row[column]);
     const key = `${playerId}:${season}:${number}`;
-    const player = one(row.players as { first_name: string | null; last_name: string } | { first_name: string | null; last_name: string }[] | null);
-    const entry = totals.get(key) ?? { key, name: `${player?.first_name?.[0] ? `${player.first_name[0]}. ` : ""}${player?.last_name ?? ""}`.trim(), period: periodLabel(number, season), amount: 0 };
+    const player = one(row.players as PlayerRel | PlayerRel[] | null);
+    const entry = totals.get(key) ?? { key, name: `${player?.first_name?.[0] ? `${player.first_name[0]}. ` : ""}${player?.last_name ?? ""}`.trim(), jersey: jerseyOf(player), period: periodLabel(number, season), amount: 0 };
     entry.amount += 1;
     totals.set(key, entry);
   }
@@ -83,8 +91,8 @@ async function mercatoVolumes(kind: "bought" | "sold", scope: HofScope): Promise
 async function managerCapitalGains(scope: HofScope): Promise<Entry[]> {
   const db = createSupabaseAdminClient();
   const [{ data: direct }, { data: orders }] = await Promise.all([
-    db.from("direct_transfers").select("squad_id,sold_player_id,sold_value,matchdays(number,seasons(name)),squads(gamer_id,profiles(username))").eq("status", "completed").limit(20000),
-    db.from("mercado_orders").select("squad_id,sold_player_id,submitted_sold_value,matchdays(number,seasons(name)),squads(gamer_id,profiles(username))").eq("status", "executed").limit(20000),
+    db.from("direct_transfers").select("squad_id,sold_player_id,sold_value,matchdays(number,seasons(name)),squads(gamer_id,profiles(username,avatar_url))").eq("status", "completed").limit(20000),
+    db.from("mercado_orders").select("squad_id,sold_player_id,submitted_sold_value,matchdays(number,seasons(name)),squads(gamer_id,profiles(username,avatar_url))").eq("status", "executed").limit(20000),
   ]);
   const { data: snaps } = await db.from("matchday_squad_snapshots").select("squad_id,player_id,acquired_value,created:frozen_at").order("frozen_at", { ascending: false }).limit(50000);
   const acquired = new Map<string, number>();
@@ -97,9 +105,9 @@ async function managerCapitalGains(scope: HofScope): Promise<Entry[]> {
     const day = one(row.matchdays);
     const season = one(day?.seasons)?.name ?? "";
     const number = scope === "day" ? day?.number ?? 0 : null;
-    const squad = one(row.squads as { gamer_id: string; profiles: { username: string } | { username: string }[] | null } | { gamer_id: string; profiles: { username: string } | { username: string }[] | null }[] | null);
+    const squad = one(row.squads as { gamer_id: string; profiles: { username: string; avatar_url: string | null } | { username: string; avatar_url: string | null }[] | null } | { gamer_id: string; profiles: { username: string; avatar_url: string | null } | { username: string; avatar_url: string | null }[] | null }[] | null);
     const key = `${squad?.gamer_id}:${season}:${number}`;
-    const entry = totals.get(key) ?? { key, gamerId: squad?.gamer_id, name: one(squad?.profiles)?.username ?? "Joueur", period: periodLabel(number, season), amount: 0 };
+    const entry = totals.get(key) ?? { key, gamerId: squad?.gamer_id, name: one(squad?.profiles)?.username ?? "Joueur", avatar: one(squad?.profiles)?.avatar_url ?? null, period: periodLabel(number, season), amount: 0 };
     entry.amount += Number(row.sold_value ?? row.submitted_sold_value) - base;
     totals.set(key, entry);
   }
@@ -107,20 +115,20 @@ async function managerCapitalGains(scope: HofScope): Promise<Entry[]> {
 }
 
 /**
- * Records for one Hall of Fame category. Bench primes are not stored by the settlement engine yet, so that category
- * stays empty (the page explains why); every other category is aggregated from recorded settlements and transfers.
+ * Records for one Hall of Fame category, aggregated from recorded settlements and executed transfers.
  */
 export async function getHallOfFame(group: HofGroup, category: HofCategory, scope: HofScope, userId?: string): Promise<HofRecord[]> {
   let entries: Entry[] = [];
   let unit: "money" | "achats" | "ventes" = "money";
-  if (group === "managers" && category === "perfs") entries = await managerGains(scope);
+  if (group === "managers" && category === "perfs") entries = await managerGains(scope, true);
+  else if (group === "managers" && category === "banc") entries = await managerGains(scope, false);
   else if (group === "managers" && category === "mercato") entries = await managerCapitalGains(scope);
   else if (group === "joueurs" && category === "perfs") entries = await playerGains(scope);
   else if (group === "joueurs" && category === "achats") { entries = await mercatoVolumes("bought", scope); unit = "achats"; }
   else if (group === "joueurs" && category === "ventes") { entries = await mercatoVolumes("sold", scope); unit = "ventes"; }
   const ranked = entries.filter((entry) => entry.amount > 0).sort((a, b) => b.amount - a.amount || a.key.localeCompare(b.key));
   const toRecord = (entry: Entry, index: number): HofRecord => ({
-    rank: index + 1, name: entry.name, period: entry.period, amount: entry.amount, isMe: Boolean(userId && entry.gamerId === userId),
+    rank: index + 1, name: entry.name, avatar: entry.avatar ?? entry.jersey ?? undefined, kind: entry.jersey && !entry.avatar ? "jersey" : undefined, gamerId: entry.gamerId, period: entry.period, amount: entry.amount, isMe: Boolean(userId && entry.gamerId === userId),
     label: unit === "money" ? undefined : `${entry.amount} ${unit === "achats" ? (entry.amount > 1 ? "achats" : "achat") : entry.amount > 1 ? "ventes" : "vente"}`,
   });
   const top = ranked.slice(0, 10).map(toRecord);

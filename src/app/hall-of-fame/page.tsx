@@ -18,6 +18,5 @@ export default async function HallOfFamePage({ searchParams }: { searchParams: P
   const category = categories[group].find((item) => item === query.category) ?? "perfs";
   const scope: HofScope = query.scope === "season" ? "season" : "day";
   const records = await getHallOfFame(group, category, scope, user.id).catch(() => []);
-  const emptyText = group === "managers" && category === "banc" ? "Les primes des remplaçants ne sont pas encore enregistrées : ce record apparaîtra dès qu’elles seront réglées avec la journée." : undefined;
-  return <HallOfFame group={group} category={category} scope={scope} records={records} emptyText={emptyText} />;
+  return <HallOfFame group={group} category={category} scope={scope} records={records} />;
 }
